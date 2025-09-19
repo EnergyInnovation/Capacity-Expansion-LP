@@ -1,0 +1,5 @@
+LIBRARY "lp_vensim_addon"
+EXPORTS
+    version_info
+    user_definition
+    vensim_external
