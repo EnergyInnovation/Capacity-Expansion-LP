@@ -1,0 +1,394 @@
+{UTF-8}
+A flat[dem peak, gen gasCC peak]=
+	1 ~~|
+A flat[dem peak, gen wind peak]=
+	1 ~~|
+A flat[dem off,gen gasCC off]=
+	1 ~~|
+A flat[dem off,gen wind off]=
+	1 ~~|
+A flat[cap gasCC peak,gen gasCC peak]=
+	+1 ~~|
+A flat[cap gasCC peak,build gasCC]=
+	-Capacity Factor[gasCC,peak]*Hours[offpeak] ~~|
+A flat[cap gasCC off,gen gasCC off]=
+	+1 ~~|
+A flat[cap gasCC off,build gasCC]=
+	-Capacity Factor[gasCC,offpeak]*Hours[offpeak] ~~|
+A flat[cap wind peak,gen wind peak]=
+	+1 ~~|
+A flat[cap wind peak, build wind]=
+	-Capacity Factor[wind, peak]*Hours[peak] ~~|
+A flat[cap wind off,gen wind off]=
+	+1 ~~|
+A flat[cap wind off, build wind]=
+	-Capacity Factor[wind, offpeak]*Hours[offpeak] ~~|
+A flat[row,col] :EXCEPT:   [dem peak, gen gasCC peak],[dem peak,gen wind peak],[dem off\
+		,gen gasCC off],[dem off,gen wind off
+],[cap gasCC peak,gen gasCC peak],[cap gasCC peak, build gasCC],[cap gasCC off,gen gasCC off\
+		],[cap gasCC off,build gasCC
+],[cap wind peak,gen wind peak],[cap wind peak,build wind],[cap wind off,gen wind off\
+		],[cap wind off,build wind],[CES total
+,gen gasCC peak],[CES total,gen gasCC off],[CES total,gen wind peak],[CES total,gen wind off\
+		]=
+	0 ~~|
+A flat[CES total, gen gasCC peak]=
+	CES Qualifying Technologies[gasCC] ~~|
+A flat[CES total, gen gasCC off]=
+	CES Qualifying Technologies[gasCC] ~~|
+A flat[CES total,gen wind peak]=
+	CES Qualifying Technologies[wind] ~~|
+A flat[CES total, gen wind off]=
+	CES Qualifying Technologies[wind]
+	~	
+	~		|
+
+b[dem peak]=
+	Demand[peak]*Hours[peak] ~~|
+b[dem off]=
+	Demand[offpeak]*Hours[offpeak] ~~|
+b[cap gasCC peak]=
+	Installed Capacity[gasCC]*Capacity Factor[gasCC,peak]*Hours[peak] ~~|
+b[cap gasCC off]=
+	Installed Capacity[gasCC]*Capacity Factor[gasCC,offpeak]*Hours[offpeak] ~~|
+b[cap wind peak]=
+	Installed Capacity[wind]*Capacity Factor[wind,peak]*Hours[peak] ~~|
+b[cap wind off]=
+	Installed Capacity[wind]*Capacity Factor[wind,offpeak]*Hours[offpeak] ~~|
+b[CES total]=
+	CES Target*Total Demand
+	~	
+	~		|
+
+Capacity Additions[gasCC]=
+	x col[build gasCC] ~~|
+Capacity Additions[wind]=
+	x col[build wind]
+	~	
+	~		|
+
+Capacity Factor[gasCC,timeslice]=
+	0.9 ~~|
+Capacity Factor[wind,timeslice]=
+	0.35,0.45
+	~	
+	~		|
+
+CAPEX[electricity source]=
+	9e+07, 1.4e+08
+	~	
+	~		|
+
+CES Qualifying Technologies[electricity source]=
+	0,1
+	~	
+	~		|
+
+CES Target=
+	0.8
+	~	
+	~		|
+
+col:
+	build gasCC, build wind, gen gasCC peak, gen gasCC off, gen wind peak, gen wind off
+	~	
+	~		|
+
+status=
+	LP Status()
+	~	
+	~		|
+
+Demand[timeslice]=
+	50,30
+	~	
+	~		|
+
+electricity source:
+	gasCC,
+	wind
+	~	
+	~		|
+
+FOM[electricity source]=
+	1.5e+07, 3.5e+07
+	~	
+	~		|
+
+Fuel[electricity source]=
+	30,0
+	~	
+	~		|
+
+Generation[gasCC,peak]=
+	x col[gen gasCC peak] ~~|
+Generation[gasCC,offpeak]=
+	x col[gen gasCC off] ~~|
+Generation[wind,peak]=
+	x col[gen wind peak] ~~|
+Generation[wind,offpeak]=
+	x col[gen wind off]
+	~	
+	~		|
+
+Hours[timeslice]=
+	1000,7000
+	~	
+	~		|
+
+sense[dem peak]=
+	0 ~~|
+sense[dem off]=
+	0 ~~|
+sense[cap gasCC peak]=
+	-1 ~~|
+sense[cap gasCC off]=
+	-1 ~~|
+sense[cap wind peak]=
+	-1 ~~|
+sense[cap wind off]=
+	-1 ~~|
+sense[CES total]=
+	+1
+	~	
+	~		|
+
+Installed Capacity[electricity source]=
+	200,100
+	~	
+	~		|
+
+timeslice:
+	average winter,
+	average spring,
+	average summer,
+	average fall,
+	peak summer,
+	peak winter
+	~	
+	~		|
+
+objective coefficients[build gasCC]=
+	CAPEX[gasCC]+FOM[gasCC] ~~|
+objective coefficients[build wind]=
+	CAPEX[wind]+FOM[wind] ~~|
+objective coefficients[gen gasCC peak]=
+	(Fuel[gasCC]+VOM[gasCC]) ~~|
+objective coefficients[gen gasCC off]=
+	(Fuel[gasCC]+VOM[gasCC]) ~~|
+objective coefficients[gen wind peak]=
+	(Fuel[wind]+VOM[wind]) ~~|
+objective coefficients[gen wind off]=
+	(Fuel[wind]+VOM[wind])
+	~	
+	~		|
+
+ObjVal2=
+	LP SOLVE(objective coefficients[build gasCC], lb[build gasCC], ub[build gasCC],
+	                  A flat[dem peak,build gasCC], sense[dem peak], b[dem peak],
+	                  ELMCOUNT(col), ELMCOUNT(row))
+	~	
+	~		|
+
+Region:
+	(Region1-Region10)
+	~	
+	~		|
+
+row:
+	dem peak, dem off, cap gasCC peak, cap gasCC off, cap wind peak, cap wind off, CES total
+	~	
+	~		|
+
+x col[col]=
+	LP X(idx[col])
+	~	
+	~		|
+
+Total Demand=
+	SUM(Demand[timeslice!]*Hours[timeslice!])
+	~	
+	~		|
+
+VOM[electricity source]=
+	3,0
+	~	
+	~		|
+
+CONSTRAINTS:
+	C1
+	~	
+	~		|
+
+idx[col]=
+	1,2,3,4,5,6
+	~	
+	~		|
+
+lb[col]=
+	0
+	~	
+	~		|
+
+ub[col]=
+	1e+20
+	~	
+	~		|
+
+VARIABLES:
+	X1,X2
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 2050
+	~	Year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 2025
+	~	Year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Year [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,90,0
+10,1,lb,635,672,8,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,2,ub,640,604,11,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,3,x col,629,878,31,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,4,idx,527,873,12,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,5,4,3,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,6,Hours,167,448,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,7,Demand,525,287,32,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,8,Installed Capacity,678,389,33,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,9,Capacity Factor,414,448,58,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,10,CAPEX,273,751,30,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,11,FOM,372,776,20,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,12,VOM,498,750,20,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,13,Fuel,159,711,17,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,14,b,527,376,7,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,15,sense,556,707,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,16,7,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,17,6,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,18,9,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,19,8,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,20,A flat,447,509,20,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,21,9,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,22,6,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,23,objective coefficients,355,663,42,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,24,13,23,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,25,10,23,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,26,11,23,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,27,12,23,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,28,ObjVal2,516,611,30,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,29,23,28,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,30,14,28,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,31,15,28,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,32,20,28,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,33,status,212,920,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,34,1,28,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,35,2,28,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,36,Capacity Additions,622,948,35,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,37,3,36,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,38,Generation,747,943,41,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,39,3,38,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,40,CES Qualifying Technologies,165,552,56,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,41,CES Target,735,262,44,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,42,Total Demand,276,270,51,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,43,7,42,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,44,6,42,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,45,41,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,46,42,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,47,40,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+///---\\\
+:L<%^E!@
+1:current.vdfx
+4:Time
+5:sense[row]
+6:average fall
+6:average spring
+6:average summer
+6:average winter
+6:build gasCC
+6:build wind
+6:C1
+6:cap gasCC off
+6:cap gasCC peak
+6:cap wind off
+6:cap wind peak
+6:CES total
+6:dem off
+6:dem peak
+6:gasCC
+6:gen gasCC off
+6:gen gasCC peak
+6:gen wind off
+6:gen wind peak
+6:peak summer
+6:peak winter
+6:Region1
+6:Region10
+6:Region2
+6:Region3
+6:Region4
+6:Region5
+6:Region6
+6:Region7
+6:Region8
+6:Region9
+6:wind
+6:X1
+6:X2
+9:current
+19:90,0
+24:2025
+25:2050
+26:2050
+15:0,0,0,0,0,0
+27:0,
+34:0,
+42:1
+72:0
+73:0
+35:Date
+36:YYYY-MM-DD
+37:2025
+38:1
+39:1
+40:0
+41:0
+95:0
+96:0
+97:0
+77:0
+78:0
+102:1
+93:0
+94:0
+92:0
+91:0
+90:0
+87:0
+75:
+43:
+103:8,8,8,3,8
+105:0,0,0,0,0,0,0,0,0,0
+104:Courier|12||0-0-0|0-0-0|-1--1--1|0-0-255|192-192-192|-1--1--1

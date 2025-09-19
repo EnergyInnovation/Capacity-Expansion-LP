@@ -1,0 +1,3417 @@
+{UTF-8}
+fraction of capacity factor achieved[electricity source]=
+	achieved capacity factor[electricity source]/annual capacity factor[electricity source\
+		]
+	~	
+	~		|
+
+annual capacity factor[electricity source]=
+	SUM(Capacity Factor[electricity source,timeslice!,hours of day!]*Days per Electricity Timeslice\
+		[timeslice!])/8760
+	~	
+	~		|
+
+achieved capacity factor[electricity source]=
+	ZIDZ(total generation[electricity source],
+	      (Total Capacity[electricity source]*8760))
+	~	
+	~		|
+
+x col[col]=
+	LP X(idx[col]) + 0*DoSolve
+	~	
+	~		|
+
+total generation[gasCC]=
+	SUM(x col[gen gasCC subrange!]) ~~|
+total generation[wind]=
+	SUM(x col[gen wind subrange!])
+	~	
+	~		|
+
+DoSolve=
+	  LP SOLVE(
+	    objective coefficients[build gasCC],
+	    lb[build gasCC],  ub[build gasCC],
+	    A flat[dem average winter Hour0, build gasCC],
+	    sense[dem average winter Hour0], b[dem average winter Hour0],
+	    ELMCOUNT(col), ELMCOUNT(row)
+	  )
+	~	
+	~		|
+
+status=
+	LP Status()        + 0*DoSolve
+	~	
+	~		|
+
+A flat[row,col] :EXCEPT:  [cap gasCC subrange,build gasCC],[cap wind subrange,build wind\
+		], [CES total,generation subrange]=
+	A flat table[row,col] ~~|
+A flat[cap gasCC average winter Hour0,build gasCC]=
+	- Capacity Factor[gasCC, average winter, Hour0] * Hours[average winter, Hour0] ~~|
+A flat[cap gasCC average winter Hour1,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour1] * Hours[average winter
+, Hour1] ~~|
+A flat[cap gasCC average winter Hour2,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour2] * Hours[average winter
+, Hour2] ~~|
+A flat[cap gasCC average winter Hour3,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour3] * Hours[average winter
+, Hour3] ~~|
+A flat[cap gasCC average winter Hour4,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour4] * Hours[average winter
+, Hour4] ~~|
+A flat[cap gasCC average winter Hour5,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour5] * Hours[average winter
+, Hour5] ~~|
+A flat[cap gasCC average winter Hour6,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour6] * Hours[average winter
+, Hour6] ~~|
+A flat[cap gasCC average winter Hour7,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour7] * Hours[average winter
+, Hour7] ~~|
+A flat[cap gasCC average winter Hour8,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour8] * Hours[average winter
+, Hour8] ~~|
+A flat[cap gasCC average winter Hour9,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour9] * Hours[average winter
+, Hour9] ~~|
+A flat[cap gasCC average winter Hour10,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour10] * Hours[average winter
+, Hour10] ~~|
+A flat[cap gasCC average winter Hour11,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour11] * Hours[average winter
+, Hour11] ~~|
+A flat[cap gasCC average winter Hour12,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour12] * Hours[average winter
+, Hour12] ~~|
+A flat[cap gasCC average winter Hour13,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour13] * Hours[average winter
+, Hour13] ~~|
+A flat[cap gasCC average winter Hour14,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour14] * Hours[average winter
+, Hour14] ~~|
+A flat[cap gasCC average winter Hour15,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour15] * Hours[average winter
+, Hour15] ~~|
+A flat[cap gasCC average winter Hour16,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour16] * Hours[average winter
+, Hour16] ~~|
+A flat[cap gasCC average winter Hour17,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour17] * Hours[average winter
+, Hour17] ~~|
+A flat[cap gasCC average winter Hour18,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour18] * Hours[average winter
+, Hour18] ~~|
+A flat[cap gasCC average winter Hour19,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour19] * Hours[average winter
+, Hour19] ~~|
+A flat[cap gasCC average winter Hour20,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour20] * Hours[average winter
+, Hour20] ~~|
+A flat[cap gasCC average winter Hour21,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour21] * Hours[average winter
+, Hour21] ~~|
+A flat[cap gasCC average winter Hour22,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour22] * Hours[average winter
+, Hour22] ~~|
+A flat[cap gasCC average winter Hour23,build gasCC]=- Capacity Factor[gasCC, average winter\
+		, Hour23] * Hours[average winter
+, Hour23] ~~|
+A flat[cap gasCC average spring Hour0,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour0] * Hours[average spring
+, Hour0] ~~|
+A flat[cap gasCC average spring Hour1,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour1] * Hours[average spring
+, Hour1] ~~|
+A flat[cap gasCC average spring Hour2,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour2] * Hours[average spring
+, Hour2] ~~|
+A flat[cap gasCC average spring Hour3,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour3] * Hours[average spring
+, Hour3] ~~|
+A flat[cap gasCC average spring Hour4,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour4] * Hours[average spring
+, Hour4] ~~|
+A flat[cap gasCC average spring Hour5,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour5] * Hours[average spring
+, Hour5] ~~|
+A flat[cap gasCC average spring Hour6,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour6] * Hours[average spring
+, Hour6] ~~|
+A flat[cap gasCC average spring Hour7,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour7] * Hours[average spring
+, Hour7] ~~|
+A flat[cap gasCC average spring Hour8,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour8] * Hours[average spring
+, Hour8] ~~|
+A flat[cap gasCC average spring Hour9,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour9] * Hours[average spring
+, Hour9] ~~|
+A flat[cap gasCC average spring Hour10,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour10] * Hours[average spring
+, Hour10] ~~|
+A flat[cap gasCC average spring Hour11,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour11] * Hours[average spring
+, Hour11] ~~|
+A flat[cap gasCC average spring Hour12,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour12] * Hours[average spring
+, Hour12] ~~|
+A flat[cap gasCC average spring Hour13,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour13] * Hours[average spring
+, Hour13] ~~|
+A flat[cap gasCC average spring Hour14,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour14] * Hours[average spring
+, Hour14] ~~|
+A flat[cap gasCC average spring Hour15,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour15] * Hours[average spring
+, Hour15] ~~|
+A flat[cap gasCC average spring Hour16,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour16] * Hours[average spring
+, Hour16] ~~|
+A flat[cap gasCC average spring Hour17,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour17] * Hours[average spring
+, Hour17] ~~|
+A flat[cap gasCC average spring Hour18,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour18] * Hours[average spring
+, Hour18] ~~|
+A flat[cap gasCC average spring Hour19,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour19] * Hours[average spring
+, Hour19] ~~|
+A flat[cap gasCC average spring Hour20,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour20] * Hours[average spring
+, Hour20] ~~|
+A flat[cap gasCC average spring Hour21,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour21] * Hours[average spring
+, Hour21] ~~|
+A flat[cap gasCC average spring Hour22,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour22] * Hours[average spring
+, Hour22] ~~|
+A flat[cap gasCC average spring Hour23,build gasCC]=- Capacity Factor[gasCC, average spring\
+		, Hour23] * Hours[average spring
+, Hour23] ~~|
+A flat[cap gasCC average summer Hour0,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour0] * Hours[average summer
+, Hour0] ~~|
+A flat[cap gasCC average summer Hour1,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour1] * Hours[average summer
+, Hour1] ~~|
+A flat[cap gasCC average summer Hour2,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour2] * Hours[average summer
+, Hour2] ~~|
+A flat[cap gasCC average summer Hour3,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour3] * Hours[average summer
+, Hour3] ~~|
+A flat[cap gasCC average summer Hour4,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour4] * Hours[average summer
+, Hour4] ~~|
+A flat[cap gasCC average summer Hour5,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour5] * Hours[average summer
+, Hour5] ~~|
+A flat[cap gasCC average summer Hour6,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour6] * Hours[average summer
+, Hour6] ~~|
+A flat[cap gasCC average summer Hour7,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour7] * Hours[average summer
+, Hour7] ~~|
+A flat[cap gasCC average summer Hour8,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour8] * Hours[average summer
+, Hour8] ~~|
+A flat[cap gasCC average summer Hour9,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour9] * Hours[average summer
+, Hour9] ~~|
+A flat[cap gasCC average summer Hour10,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour10] * Hours[average summer
+, Hour10] ~~|
+A flat[cap gasCC average summer Hour11,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour11] * Hours[average summer
+, Hour11] ~~|
+A flat[cap gasCC average summer Hour12,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour12] * Hours[average summer
+, Hour12] ~~|
+A flat[cap gasCC average summer Hour13,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour13] * Hours[average summer
+, Hour13] ~~|
+A flat[cap gasCC average summer Hour14,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour14] * Hours[average summer
+, Hour14] ~~|
+A flat[cap gasCC average summer Hour15,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour15] * Hours[average summer
+, Hour15] ~~|
+A flat[cap gasCC average summer Hour16,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour16] * Hours[average summer
+, Hour16] ~~|
+A flat[cap gasCC average summer Hour17,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour17] * Hours[average summer
+, Hour17] ~~|
+A flat[cap gasCC average summer Hour18,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour18] * Hours[average summer
+, Hour18] ~~|
+A flat[cap gasCC average summer Hour19,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour19] * Hours[average summer
+, Hour19] ~~|
+A flat[cap gasCC average summer Hour20,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour20] * Hours[average summer
+, Hour20] ~~|
+A flat[cap gasCC average summer Hour21,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour21] * Hours[average summer
+, Hour21] ~~|
+A flat[cap gasCC average summer Hour22,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour22] * Hours[average summer
+, Hour22] ~~|
+A flat[cap gasCC average summer Hour23,build gasCC]=- Capacity Factor[gasCC, average summer\
+		, Hour23] * Hours[average summer
+, Hour23] ~~|
+A flat[cap gasCC average fall Hour0,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour0] * Hours[average fall, Hour0
+] ~~|
+A flat[cap gasCC average fall Hour1,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour1] * Hours[average fall, Hour1
+] ~~|
+A flat[cap gasCC average fall Hour2,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour2] * Hours[average fall, Hour2
+] ~~|
+A flat[cap gasCC average fall Hour3,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour3] * Hours[average fall, Hour3
+] ~~|
+A flat[cap gasCC average fall Hour4,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour4] * Hours[average fall, Hour4
+] ~~|
+A flat[cap gasCC average fall Hour5,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour5] * Hours[average fall, Hour5
+] ~~|
+A flat[cap gasCC average fall Hour6,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour6] * Hours[average fall, Hour6
+] ~~|
+A flat[cap gasCC average fall Hour7,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour7] * Hours[average fall, Hour7
+] ~~|
+A flat[cap gasCC average fall Hour8,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour8] * Hours[average fall, Hour8
+] ~~|
+A flat[cap gasCC average fall Hour9,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour9] * Hours[average fall, Hour9
+] ~~|
+A flat[cap gasCC average fall Hour10,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour10] * Hours[average fall, Hour10
+] ~~|
+A flat[cap gasCC average fall Hour11,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour11] * Hours[average fall, Hour11
+] ~~|
+A flat[cap gasCC average fall Hour12,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour12] * Hours[average fall, Hour12
+] ~~|
+A flat[cap gasCC average fall Hour13,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour13] * Hours[average fall, Hour13
+] ~~|
+A flat[cap gasCC average fall Hour14,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour14] * Hours[average fall, Hour14
+] ~~|
+A flat[cap gasCC average fall Hour15,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour15] * Hours[average fall, Hour15
+] ~~|
+A flat[cap gasCC average fall Hour16,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour16] * Hours[average fall, Hour16
+] ~~|
+A flat[cap gasCC average fall Hour17,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour17] * Hours[average fall, Hour17
+] ~~|
+A flat[cap gasCC average fall Hour18,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour18] * Hours[average fall, Hour18
+] ~~|
+A flat[cap gasCC average fall Hour19,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour19] * Hours[average fall, Hour19
+] ~~|
+A flat[cap gasCC average fall Hour20,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour20] * Hours[average fall, Hour20
+] ~~|
+A flat[cap gasCC average fall Hour21,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour21] * Hours[average fall, Hour21
+] ~~|
+A flat[cap gasCC average fall Hour22,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour22] * Hours[average fall, Hour22
+] ~~|
+A flat[cap gasCC average fall Hour23,build gasCC]=- Capacity Factor[gasCC, average fall\
+		, Hour23] * Hours[average fall, Hour23
+] ~~|
+A flat[cap gasCC peak summer Hour0,build gasCC]=- Capacity Factor[gasCC, peak summer,\
+		 Hour0] * Hours[peak summer, Hour0] ~~|
+A flat[cap gasCC peak summer Hour1,build gasCC]=- Capacity Factor[gasCC, peak summer,\
+		 Hour1] * Hours[peak summer, Hour1] ~~|
+A flat[cap gasCC peak summer Hour2,build gasCC]=- Capacity Factor[gasCC, peak summer,\
+		 Hour2] * Hours[peak summer, Hour2] ~~|
+A flat[cap gasCC peak summer Hour3,build gasCC]=- Capacity Factor[gasCC, peak summer,\
+		 Hour3] * Hours[peak summer, Hour3] ~~|
+A flat[cap gasCC peak summer Hour4,build gasCC]=- Capacity Factor[gasCC, peak summer,\
+		 Hour4] * Hours[peak summer, Hour4] ~~|
+A flat[cap gasCC peak summer Hour5,build gasCC]=- Capacity Factor[gasCC, peak summer,\
+		 Hour5] * Hours[peak summer, Hour5] ~~|
+A flat[cap gasCC peak summer Hour6,build gasCC]=- Capacity Factor[gasCC, peak summer,\
+		 Hour6] * Hours[peak summer, Hour6] ~~|
+A flat[cap gasCC peak summer Hour7,build gasCC]=- Capacity Factor[gasCC, peak summer,\
+		 Hour7] * Hours[peak summer, Hour7] ~~|
+A flat[cap gasCC peak summer Hour8,build gasCC]=- Capacity Factor[gasCC, peak summer,\
+		 Hour8] * Hours[peak summer, Hour8] ~~|
+A flat[cap gasCC peak summer Hour9,build gasCC]=- Capacity Factor[gasCC, peak summer,\
+		 Hour9] * Hours[peak summer, Hour9] ~~|
+A flat[cap gasCC peak summer Hour10,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour10] * Hours[peak summer, Hour10
+] ~~|
+A flat[cap gasCC peak summer Hour11,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour11] * Hours[peak summer, Hour11
+] ~~|
+A flat[cap gasCC peak summer Hour12,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour12] * Hours[peak summer, Hour12
+] ~~|
+A flat[cap gasCC peak summer Hour13,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour13] * Hours[peak summer, Hour13
+] ~~|
+A flat[cap gasCC peak summer Hour14,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour14] * Hours[peak summer, Hour14
+] ~~|
+A flat[cap gasCC peak summer Hour15,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour15] * Hours[peak summer, Hour15
+] ~~|
+A flat[cap gasCC peak summer Hour16,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour16] * Hours[peak summer, Hour16
+] ~~|
+A flat[cap gasCC peak summer Hour17,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour17] * Hours[peak summer, Hour17
+] ~~|
+A flat[cap gasCC peak summer Hour18,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour18] * Hours[peak summer, Hour18
+] ~~|
+A flat[cap gasCC peak summer Hour19,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour19] * Hours[peak summer, Hour19
+] ~~|
+A flat[cap gasCC peak summer Hour20,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour20] * Hours[peak summer, Hour20
+] ~~|
+A flat[cap gasCC peak summer Hour21,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour21] * Hours[peak summer, Hour21
+] ~~|
+A flat[cap gasCC peak summer Hour22,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour22] * Hours[peak summer, Hour22
+] ~~|
+A flat[cap gasCC peak summer Hour23,build gasCC]=- Capacity Factor[gasCC, peak summer\
+		, Hour23] * Hours[peak summer, Hour23
+] ~~|
+A flat[cap gasCC peak winter Hour0,build gasCC]=- Capacity Factor[gasCC, peak winter,\
+		 Hour0] * Hours[peak winter, Hour0] ~~|
+A flat[cap gasCC peak winter Hour1,build gasCC]=- Capacity Factor[gasCC, peak winter,\
+		 Hour1] * Hours[peak winter, Hour1] ~~|
+A flat[cap gasCC peak winter Hour2,build gasCC]=- Capacity Factor[gasCC, peak winter,\
+		 Hour2] * Hours[peak winter, Hour2] ~~|
+A flat[cap gasCC peak winter Hour3,build gasCC]=- Capacity Factor[gasCC, peak winter,\
+		 Hour3] * Hours[peak winter, Hour3] ~~|
+A flat[cap gasCC peak winter Hour4,build gasCC]=- Capacity Factor[gasCC, peak winter,\
+		 Hour4] * Hours[peak winter, Hour4] ~~|
+A flat[cap gasCC peak winter Hour5,build gasCC]=- Capacity Factor[gasCC, peak winter,\
+		 Hour5] * Hours[peak winter, Hour5] ~~|
+A flat[cap gasCC peak winter Hour6,build gasCC]=- Capacity Factor[gasCC, peak winter,\
+		 Hour6] * Hours[peak winter, Hour6] ~~|
+A flat[cap gasCC peak winter Hour7,build gasCC]=- Capacity Factor[gasCC, peak winter,\
+		 Hour7] * Hours[peak winter, Hour7] ~~|
+A flat[cap gasCC peak winter Hour8,build gasCC]=- Capacity Factor[gasCC, peak winter,\
+		 Hour8] * Hours[peak winter, Hour8] ~~|
+A flat[cap gasCC peak winter Hour9,build gasCC]=- Capacity Factor[gasCC, peak winter,\
+		 Hour9] * Hours[peak winter, Hour9] ~~|
+A flat[cap gasCC peak winter Hour10,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour10] * Hours[peak winter, Hour10
+] ~~|
+A flat[cap gasCC peak winter Hour11,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour11] * Hours[peak winter, Hour11
+] ~~|
+A flat[cap gasCC peak winter Hour12,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour12] * Hours[peak winter, Hour12
+] ~~|
+A flat[cap gasCC peak winter Hour13,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour13] * Hours[peak winter, Hour13
+] ~~|
+A flat[cap gasCC peak winter Hour14,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour14] * Hours[peak winter, Hour14
+] ~~|
+A flat[cap gasCC peak winter Hour15,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour15] * Hours[peak winter, Hour15
+] ~~|
+A flat[cap gasCC peak winter Hour16,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour16] * Hours[peak winter, Hour16
+] ~~|
+A flat[cap gasCC peak winter Hour17,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour17] * Hours[peak winter, Hour17
+] ~~|
+A flat[cap gasCC peak winter Hour18,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour18] * Hours[peak winter, Hour18
+] ~~|
+A flat[cap gasCC peak winter Hour19,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour19] * Hours[peak winter, Hour19
+] ~~|
+A flat[cap gasCC peak winter Hour20,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour20] * Hours[peak winter, Hour20
+] ~~|
+A flat[cap gasCC peak winter Hour21,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour21] * Hours[peak winter, Hour21
+] ~~|
+A flat[cap gasCC peak winter Hour22,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour22] * Hours[peak winter, Hour22
+] ~~|
+A flat[cap gasCC peak winter Hour23,build gasCC]=- Capacity Factor[gasCC, peak winter\
+		, Hour23] * Hours[peak winter, Hour23
+] ~~|
+A flat[cap wind average winter Hour0,build wind]=- Capacity Factor[wind, average winter\
+		, Hour0] * Hours[average winter, 
+Hour0] ~~|
+A flat[cap wind average winter Hour1,build wind]=- Capacity Factor[wind, average winter\
+		, Hour1] * Hours[average winter, 
+Hour1] ~~|
+A flat[cap wind average winter Hour2,build wind]=- Capacity Factor[wind, average winter\
+		, Hour2] * Hours[average winter, 
+Hour2] ~~|
+A flat[cap wind average winter Hour3,build wind]=- Capacity Factor[wind, average winter\
+		, Hour3] * Hours[average winter, 
+Hour3] ~~|
+A flat[cap wind average winter Hour4,build wind]=- Capacity Factor[wind, average winter\
+		, Hour4] * Hours[average winter, 
+Hour4] ~~|
+A flat[cap wind average winter Hour5,build wind]=- Capacity Factor[wind, average winter\
+		, Hour5] * Hours[average winter, 
+Hour5] ~~|
+A flat[cap wind average winter Hour6,build wind]=- Capacity Factor[wind, average winter\
+		, Hour6] * Hours[average winter, 
+Hour6] ~~|
+A flat[cap wind average winter Hour7,build wind]=- Capacity Factor[wind, average winter\
+		, Hour7] * Hours[average winter, 
+Hour7] ~~|
+A flat[cap wind average winter Hour8,build wind]=- Capacity Factor[wind, average winter\
+		, Hour8] * Hours[average winter, 
+Hour8] ~~|
+A flat[cap wind average winter Hour9,build wind]=- Capacity Factor[wind, average winter\
+		, Hour9] * Hours[average winter, 
+Hour9] ~~|
+A flat[cap wind average winter Hour10,build wind]=- Capacity Factor[wind, average winter\
+		, Hour10] * Hours[average winter
+, Hour10] ~~|
+A flat[cap wind average winter Hour11,build wind]=- Capacity Factor[wind, average winter\
+		, Hour11] * Hours[average winter
+, Hour11] ~~|
+A flat[cap wind average winter Hour12,build wind]=- Capacity Factor[wind, average winter\
+		, Hour12] * Hours[average winter
+, Hour12] ~~|
+A flat[cap wind average winter Hour13,build wind]=- Capacity Factor[wind, average winter\
+		, Hour13] * Hours[average winter
+, Hour13] ~~|
+A flat[cap wind average winter Hour14,build wind]=- Capacity Factor[wind, average winter\
+		, Hour14] * Hours[average winter
+, Hour14] ~~|
+A flat[cap wind average winter Hour15,build wind]=- Capacity Factor[wind, average winter\
+		, Hour15] * Hours[average winter
+, Hour15] ~~|
+A flat[cap wind average winter Hour16,build wind]=- Capacity Factor[wind, average winter\
+		, Hour16] * Hours[average winter
+, Hour16] ~~|
+A flat[cap wind average winter Hour17,build wind]=- Capacity Factor[wind, average winter\
+		, Hour17] * Hours[average winter
+, Hour17] ~~|
+A flat[cap wind average winter Hour18,build wind]=- Capacity Factor[wind, average winter\
+		, Hour18] * Hours[average winter
+, Hour18] ~~|
+A flat[cap wind average winter Hour19,build wind]=- Capacity Factor[wind, average winter\
+		, Hour19] * Hours[average winter
+, Hour19] ~~|
+A flat[cap wind average winter Hour20,build wind]=- Capacity Factor[wind, average winter\
+		, Hour20] * Hours[average winter
+, Hour20] ~~|
+A flat[cap wind average winter Hour21,build wind]=- Capacity Factor[wind, average winter\
+		, Hour21] * Hours[average winter
+, Hour21] ~~|
+A flat[cap wind average winter Hour22,build wind]=- Capacity Factor[wind, average winter\
+		, Hour22] * Hours[average winter
+, Hour22] ~~|
+A flat[cap wind average winter Hour23,build wind]=- Capacity Factor[wind, average winter\
+		, Hour23] * Hours[average winter
+, Hour23] ~~|
+A flat[cap wind average spring Hour0,build wind]=- Capacity Factor[wind, average spring\
+		, Hour0] * Hours[average spring, 
+Hour0] ~~|
+A flat[cap wind average spring Hour1,build wind]=- Capacity Factor[wind, average spring\
+		, Hour1] * Hours[average spring, 
+Hour1] ~~|
+A flat[cap wind average spring Hour2,build wind]=- Capacity Factor[wind, average spring\
+		, Hour2] * Hours[average spring, 
+Hour2] ~~|
+A flat[cap wind average spring Hour3,build wind]=- Capacity Factor[wind, average spring\
+		, Hour3] * Hours[average spring, 
+Hour3] ~~|
+A flat[cap wind average spring Hour4,build wind]=- Capacity Factor[wind, average spring\
+		, Hour4] * Hours[average spring, 
+Hour4] ~~|
+A flat[cap wind average spring Hour5,build wind]=- Capacity Factor[wind, average spring\
+		, Hour5] * Hours[average spring, 
+Hour5] ~~|
+A flat[cap wind average spring Hour6,build wind]=- Capacity Factor[wind, average spring\
+		, Hour6] * Hours[average spring, 
+Hour6] ~~|
+A flat[cap wind average spring Hour7,build wind]=- Capacity Factor[wind, average spring\
+		, Hour7] * Hours[average spring, 
+Hour7] ~~|
+A flat[cap wind average spring Hour8,build wind]=- Capacity Factor[wind, average spring\
+		, Hour8] * Hours[average spring, 
+Hour8] ~~|
+A flat[cap wind average spring Hour9,build wind]=- Capacity Factor[wind, average spring\
+		, Hour9] * Hours[average spring, 
+Hour9] ~~|
+A flat[cap wind average spring Hour10,build wind]=- Capacity Factor[wind, average spring\
+		, Hour10] * Hours[average spring
+, Hour10] ~~|
+A flat[cap wind average spring Hour11,build wind]=- Capacity Factor[wind, average spring\
+		, Hour11] * Hours[average spring
+, Hour11] ~~|
+A flat[cap wind average spring Hour12,build wind]=- Capacity Factor[wind, average spring\
+		, Hour12] * Hours[average spring
+, Hour12] ~~|
+A flat[cap wind average spring Hour13,build wind]=- Capacity Factor[wind, average spring\
+		, Hour13] * Hours[average spring
+, Hour13] ~~|
+A flat[cap wind average spring Hour14,build wind]=- Capacity Factor[wind, average spring\
+		, Hour14] * Hours[average spring
+, Hour14] ~~|
+A flat[cap wind average spring Hour15,build wind]=- Capacity Factor[wind, average spring\
+		, Hour15] * Hours[average spring
+, Hour15] ~~|
+A flat[cap wind average spring Hour16,build wind]=- Capacity Factor[wind, average spring\
+		, Hour16] * Hours[average spring
+, Hour16] ~~|
+A flat[cap wind average spring Hour17,build wind]=- Capacity Factor[wind, average spring\
+		, Hour17] * Hours[average spring
+, Hour17] ~~|
+A flat[cap wind average spring Hour18,build wind]=- Capacity Factor[wind, average spring\
+		, Hour18] * Hours[average spring
+, Hour18] ~~|
+A flat[cap wind average spring Hour19,build wind]=- Capacity Factor[wind, average spring\
+		, Hour19] * Hours[average spring
+, Hour19] ~~|
+A flat[cap wind average spring Hour20,build wind]=- Capacity Factor[wind, average spring\
+		, Hour20] * Hours[average spring
+, Hour20] ~~|
+A flat[cap wind average spring Hour21,build wind]=- Capacity Factor[wind, average spring\
+		, Hour21] * Hours[average spring
+, Hour21] ~~|
+A flat[cap wind average spring Hour22,build wind]=- Capacity Factor[wind, average spring\
+		, Hour22] * Hours[average spring
+, Hour22] ~~|
+A flat[cap wind average spring Hour23,build wind]=- Capacity Factor[wind, average spring\
+		, Hour23] * Hours[average spring
+, Hour23] ~~|
+A flat[cap wind average summer Hour0,build wind]=- Capacity Factor[wind, average summer\
+		, Hour0] * Hours[average summer, 
+Hour0] ~~|
+A flat[cap wind average summer Hour1,build wind]=- Capacity Factor[wind, average summer\
+		, Hour1] * Hours[average summer, 
+Hour1] ~~|
+A flat[cap wind average summer Hour2,build wind]=- Capacity Factor[wind, average summer\
+		, Hour2] * Hours[average summer, 
+Hour2] ~~|
+A flat[cap wind average summer Hour3,build wind]=- Capacity Factor[wind, average summer\
+		, Hour3] * Hours[average summer, 
+Hour3] ~~|
+A flat[cap wind average summer Hour4,build wind]=- Capacity Factor[wind, average summer\
+		, Hour4] * Hours[average summer, 
+Hour4] ~~|
+A flat[cap wind average summer Hour5,build wind]=- Capacity Factor[wind, average summer\
+		, Hour5] * Hours[average summer, 
+Hour5] ~~|
+A flat[cap wind average summer Hour6,build wind]=- Capacity Factor[wind, average summer\
+		, Hour6] * Hours[average summer, 
+Hour6] ~~|
+A flat[cap wind average summer Hour7,build wind]=- Capacity Factor[wind, average summer\
+		, Hour7] * Hours[average summer, 
+Hour7] ~~|
+A flat[cap wind average summer Hour8,build wind]=- Capacity Factor[wind, average summer\
+		, Hour8] * Hours[average summer, 
+Hour8] ~~|
+A flat[cap wind average summer Hour9,build wind]=- Capacity Factor[wind, average summer\
+		, Hour9] * Hours[average summer, 
+Hour9] ~~|
+A flat[cap wind average summer Hour10,build wind]=- Capacity Factor[wind, average summer\
+		, Hour10] * Hours[average summer
+, Hour10] ~~|
+A flat[cap wind average summer Hour11,build wind]=- Capacity Factor[wind, average summer\
+		, Hour11] * Hours[average summer
+, Hour11] ~~|
+A flat[cap wind average summer Hour12,build wind]=- Capacity Factor[wind, average summer\
+		, Hour12] * Hours[average summer
+, Hour12] ~~|
+A flat[cap wind average summer Hour13,build wind]=- Capacity Factor[wind, average summer\
+		, Hour13] * Hours[average summer
+, Hour13] ~~|
+A flat[cap wind average summer Hour14,build wind]=- Capacity Factor[wind, average summer\
+		, Hour14] * Hours[average summer
+, Hour14] ~~|
+A flat[cap wind average summer Hour15,build wind]=- Capacity Factor[wind, average summer\
+		, Hour15] * Hours[average summer
+, Hour15] ~~|
+A flat[cap wind average summer Hour16,build wind]=- Capacity Factor[wind, average summer\
+		, Hour16] * Hours[average summer
+, Hour16] ~~|
+A flat[cap wind average summer Hour17,build wind]=- Capacity Factor[wind, average summer\
+		, Hour17] * Hours[average summer
+, Hour17] ~~|
+A flat[cap wind average summer Hour18,build wind]=- Capacity Factor[wind, average summer\
+		, Hour18] * Hours[average summer
+, Hour18] ~~|
+A flat[cap wind average summer Hour19,build wind]=- Capacity Factor[wind, average summer\
+		, Hour19] * Hours[average summer
+, Hour19] ~~|
+A flat[cap wind average summer Hour20,build wind]=- Capacity Factor[wind, average summer\
+		, Hour20] * Hours[average summer
+, Hour20] ~~|
+A flat[cap wind average summer Hour21,build wind]=- Capacity Factor[wind, average summer\
+		, Hour21] * Hours[average summer
+, Hour21] ~~|
+A flat[cap wind average summer Hour22,build wind]=- Capacity Factor[wind, average summer\
+		, Hour22] * Hours[average summer
+, Hour22] ~~|
+A flat[cap wind average summer Hour23,build wind]=- Capacity Factor[wind, average summer\
+		, Hour23] * Hours[average summer
+, Hour23] ~~|
+A flat[cap wind average fall Hour0,build wind]=- Capacity Factor[wind, average fall, \
+		Hour0] * Hours[average fall, Hour0] ~~|
+A flat[cap wind average fall Hour1,build wind]=- Capacity Factor[wind, average fall, \
+		Hour1] * Hours[average fall, Hour1] ~~|
+A flat[cap wind average fall Hour2,build wind]=- Capacity Factor[wind, average fall, \
+		Hour2] * Hours[average fall, Hour2] ~~|
+A flat[cap wind average fall Hour3,build wind]=- Capacity Factor[wind, average fall, \
+		Hour3] * Hours[average fall, Hour3] ~~|
+A flat[cap wind average fall Hour4,build wind]=- Capacity Factor[wind, average fall, \
+		Hour4] * Hours[average fall, Hour4] ~~|
+A flat[cap wind average fall Hour5,build wind]=- Capacity Factor[wind, average fall, \
+		Hour5] * Hours[average fall, Hour5] ~~|
+A flat[cap wind average fall Hour6,build wind]=- Capacity Factor[wind, average fall, \
+		Hour6] * Hours[average fall, Hour6] ~~|
+A flat[cap wind average fall Hour7,build wind]=- Capacity Factor[wind, average fall, \
+		Hour7] * Hours[average fall, Hour7] ~~|
+A flat[cap wind average fall Hour8,build wind]=- Capacity Factor[wind, average fall, \
+		Hour8] * Hours[average fall, Hour8] ~~|
+A flat[cap wind average fall Hour9,build wind]=- Capacity Factor[wind, average fall, \
+		Hour9] * Hours[average fall, Hour9] ~~|
+A flat[cap wind average fall Hour10,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour10] * Hours[average fall, Hour10
+] ~~|
+A flat[cap wind average fall Hour11,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour11] * Hours[average fall, Hour11
+] ~~|
+A flat[cap wind average fall Hour12,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour12] * Hours[average fall, Hour12
+] ~~|
+A flat[cap wind average fall Hour13,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour13] * Hours[average fall, Hour13
+] ~~|
+A flat[cap wind average fall Hour14,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour14] * Hours[average fall, Hour14
+] ~~|
+A flat[cap wind average fall Hour15,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour15] * Hours[average fall, Hour15
+] ~~|
+A flat[cap wind average fall Hour16,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour16] * Hours[average fall, Hour16
+] ~~|
+A flat[cap wind average fall Hour17,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour17] * Hours[average fall, Hour17
+] ~~|
+A flat[cap wind average fall Hour18,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour18] * Hours[average fall, Hour18
+] ~~|
+A flat[cap wind average fall Hour19,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour19] * Hours[average fall, Hour19
+] ~~|
+A flat[cap wind average fall Hour20,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour20] * Hours[average fall, Hour20
+] ~~|
+A flat[cap wind average fall Hour21,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour21] * Hours[average fall, Hour21
+] ~~|
+A flat[cap wind average fall Hour22,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour22] * Hours[average fall, Hour22
+] ~~|
+A flat[cap wind average fall Hour23,build wind]=- Capacity Factor[wind, average fall,\
+		 Hour23] * Hours[average fall, Hour23
+] ~~|
+A flat[cap wind peak summer Hour0,build wind]=- Capacity Factor[wind, peak summer, Hour0\
+		] * Hours[peak summer, Hour0] ~~|
+A flat[cap wind peak summer Hour1,build wind]=- Capacity Factor[wind, peak summer, Hour1\
+		] * Hours[peak summer, Hour1] ~~|
+A flat[cap wind peak summer Hour2,build wind]=- Capacity Factor[wind, peak summer, Hour2\
+		] * Hours[peak summer, Hour2] ~~|
+A flat[cap wind peak summer Hour3,build wind]=- Capacity Factor[wind, peak summer, Hour3\
+		] * Hours[peak summer, Hour3] ~~|
+A flat[cap wind peak summer Hour4,build wind]=- Capacity Factor[wind, peak summer, Hour4\
+		] * Hours[peak summer, Hour4] ~~|
+A flat[cap wind peak summer Hour5,build wind]=- Capacity Factor[wind, peak summer, Hour5\
+		] * Hours[peak summer, Hour5] ~~|
+A flat[cap wind peak summer Hour6,build wind]=- Capacity Factor[wind, peak summer, Hour6\
+		] * Hours[peak summer, Hour6] ~~|
+A flat[cap wind peak summer Hour7,build wind]=- Capacity Factor[wind, peak summer, Hour7\
+		] * Hours[peak summer, Hour7] ~~|
+A flat[cap wind peak summer Hour8,build wind]=- Capacity Factor[wind, peak summer, Hour8\
+		] * Hours[peak summer, Hour8] ~~|
+A flat[cap wind peak summer Hour9,build wind]=- Capacity Factor[wind, peak summer, Hour9\
+		] * Hours[peak summer, Hour9] ~~|
+A flat[cap wind peak summer Hour10,build wind]=- Capacity Factor[wind, peak summer, Hour10\
+		] * Hours[peak summer, Hour10] ~~|
+A flat[cap wind peak summer Hour11,build wind]=- Capacity Factor[wind, peak summer, Hour11\
+		] * Hours[peak summer, Hour11] ~~|
+A flat[cap wind peak summer Hour12,build wind]=- Capacity Factor[wind, peak summer, Hour12\
+		] * Hours[peak summer, Hour12] ~~|
+A flat[cap wind peak summer Hour13,build wind]=- Capacity Factor[wind, peak summer, Hour13\
+		] * Hours[peak summer, Hour13] ~~|
+A flat[cap wind peak summer Hour14,build wind]=- Capacity Factor[wind, peak summer, Hour14\
+		] * Hours[peak summer, Hour14] ~~|
+A flat[cap wind peak summer Hour15,build wind]=- Capacity Factor[wind, peak summer, Hour15\
+		] * Hours[peak summer, Hour15] ~~|
+A flat[cap wind peak summer Hour16,build wind]=- Capacity Factor[wind, peak summer, Hour16\
+		] * Hours[peak summer, Hour16] ~~|
+A flat[cap wind peak summer Hour17,build wind]=- Capacity Factor[wind, peak summer, Hour17\
+		] * Hours[peak summer, Hour17] ~~|
+A flat[cap wind peak summer Hour18,build wind]=- Capacity Factor[wind, peak summer, Hour18\
+		] * Hours[peak summer, Hour18] ~~|
+A flat[cap wind peak summer Hour19,build wind]=- Capacity Factor[wind, peak summer, Hour19\
+		] * Hours[peak summer, Hour19] ~~|
+A flat[cap wind peak summer Hour20,build wind]=- Capacity Factor[wind, peak summer, Hour20\
+		] * Hours[peak summer, Hour20] ~~|
+A flat[cap wind peak summer Hour21,build wind]=- Capacity Factor[wind, peak summer, Hour21\
+		] * Hours[peak summer, Hour21] ~~|
+A flat[cap wind peak summer Hour22,build wind]=- Capacity Factor[wind, peak summer, Hour22\
+		] * Hours[peak summer, Hour22] ~~|
+A flat[cap wind peak summer Hour23,build wind]=- Capacity Factor[wind, peak summer, Hour23\
+		] * Hours[peak summer, Hour23] ~~|
+A flat[cap wind peak winter Hour0,build wind]=- Capacity Factor[wind, peak winter, Hour0\
+		] * Hours[peak winter, Hour0] ~~|
+A flat[cap wind peak winter Hour1,build wind]=- Capacity Factor[wind, peak winter, Hour1\
+		] * Hours[peak winter, Hour1] ~~|
+A flat[cap wind peak winter Hour2,build wind]=- Capacity Factor[wind, peak winter, Hour2\
+		] * Hours[peak winter, Hour2] ~~|
+A flat[cap wind peak winter Hour3,build wind]=- Capacity Factor[wind, peak winter, Hour3\
+		] * Hours[peak winter, Hour3] ~~|
+A flat[cap wind peak winter Hour4,build wind]=- Capacity Factor[wind, peak winter, Hour4\
+		] * Hours[peak winter, Hour4] ~~|
+A flat[cap wind peak winter Hour5,build wind]=- Capacity Factor[wind, peak winter, Hour5\
+		] * Hours[peak winter, Hour5] ~~|
+A flat[cap wind peak winter Hour6,build wind]=- Capacity Factor[wind, peak winter, Hour6\
+		] * Hours[peak winter, Hour6] ~~|
+A flat[cap wind peak winter Hour7,build wind]=- Capacity Factor[wind, peak winter, Hour7\
+		] * Hours[peak winter, Hour7] ~~|
+A flat[cap wind peak winter Hour8,build wind]=- Capacity Factor[wind, peak winter, Hour8\
+		] * Hours[peak winter, Hour8] ~~|
+A flat[cap wind peak winter Hour9,build wind]=- Capacity Factor[wind, peak winter, Hour9\
+		] * Hours[peak winter, Hour9] ~~|
+A flat[cap wind peak winter Hour10,build wind]=- Capacity Factor[wind, peak winter, Hour10\
+		] * Hours[peak winter, Hour10] ~~|
+A flat[cap wind peak winter Hour11,build wind]=- Capacity Factor[wind, peak winter, Hour11\
+		] * Hours[peak winter, Hour11] ~~|
+A flat[cap wind peak winter Hour12,build wind]=- Capacity Factor[wind, peak winter, Hour12\
+		] * Hours[peak winter, Hour12] ~~|
+A flat[cap wind peak winter Hour13,build wind]=- Capacity Factor[wind, peak winter, Hour13\
+		] * Hours[peak winter, Hour13] ~~|
+A flat[cap wind peak winter Hour14,build wind]=- Capacity Factor[wind, peak winter, Hour14\
+		] * Hours[peak winter, Hour14] ~~|
+A flat[cap wind peak winter Hour15,build wind]=- Capacity Factor[wind, peak winter, Hour15\
+		] * Hours[peak winter, Hour15] ~~|
+A flat[cap wind peak winter Hour16,build wind]=- Capacity Factor[wind, peak winter, Hour16\
+		] * Hours[peak winter, Hour16] ~~|
+A flat[cap wind peak winter Hour17,build wind]=- Capacity Factor[wind, peak winter, Hour17\
+		] * Hours[peak winter, Hour17] ~~|
+A flat[cap wind peak winter Hour18,build wind]=- Capacity Factor[wind, peak winter, Hour18\
+		] * Hours[peak winter, Hour18] ~~|
+A flat[cap wind peak winter Hour19,build wind]=- Capacity Factor[wind, peak winter, Hour19\
+		] * Hours[peak winter, Hour19] ~~|
+A flat[cap wind peak winter Hour20,build wind]=- Capacity Factor[wind, peak winter, Hour20\
+		] * Hours[peak winter, Hour20] ~~|
+A flat[cap wind peak winter Hour21,build wind]=- Capacity Factor[wind, peak winter, Hour21\
+		] * Hours[peak winter, Hour21] ~~|
+A flat[cap wind peak winter Hour22,build wind]=- Capacity Factor[wind, peak winter, Hour22\
+		] * Hours[peak winter, Hour22] ~~|
+A flat[cap wind peak winter Hour23,build wind]=- Capacity Factor[wind, peak winter, Hour23\
+		] * Hours[peak winter, Hour23] ~~|
+A flat[CES total,gen gasCC subrange] = CES Qualifying Technologies[gasCC] ~~|
+A flat[CES total, gen wind subrange] = CES Qualifying Technologies[wind]
+	~	
+	~		|
+
+Total Capacity[electricity source]=
+	Installed Capacity[electricity source]+Capacity Additions[electricity source]
+	~	
+	~		|
+
+A flat table[row,col]=
+	GET DIRECT CONSTANTS( 'A matrix.csv', ',' , 'B2' )
+	~	
+	~		|
+
+b[CES total]=
+	CES Target*SUM(Demand[timeslice!,hours of day!]*Hours[timeslice!,hours of day!]) ~~|
+b[dem average winter Hour0]=Demand[average winter, Hour0] * Hours[average winter, Hour0\
+		] ~~|
+b[dem average winter Hour1]=Demand[average winter, Hour1] * Hours[average winter, Hour1\
+		] ~~|
+b[dem average winter Hour2]=Demand[average winter, Hour2] * Hours[average winter, Hour2\
+		] ~~|
+b[dem average winter Hour3]=Demand[average winter, Hour3] * Hours[average winter, Hour3\
+		] ~~|
+b[dem average winter Hour4]=Demand[average winter, Hour4] * Hours[average winter, Hour4\
+		] ~~|
+b[dem average winter Hour5]=Demand[average winter, Hour5] * Hours[average winter, Hour5\
+		] ~~|
+b[dem average winter Hour6]=Demand[average winter, Hour6] * Hours[average winter, Hour6\
+		] ~~|
+b[dem average winter Hour7]=Demand[average winter, Hour7] * Hours[average winter, Hour7\
+		] ~~|
+b[dem average winter Hour8]=Demand[average winter, Hour8] * Hours[average winter, Hour8\
+		] ~~|
+b[dem average winter Hour9]=Demand[average winter, Hour9] * Hours[average winter, Hour9\
+		] ~~|
+b[dem average winter Hour10]=Demand[average winter, Hour10] * Hours[average winter, Hour10\
+		] ~~|
+b[dem average winter Hour11]=Demand[average winter, Hour11] * Hours[average winter, Hour11\
+		] ~~|
+b[dem average winter Hour12]=Demand[average winter, Hour12] * Hours[average winter, Hour12\
+		] ~~|
+b[dem average winter Hour13]=Demand[average winter, Hour13] * Hours[average winter, Hour13\
+		] ~~|
+b[dem average winter Hour14]=Demand[average winter, Hour14] * Hours[average winter, Hour14\
+		] ~~|
+b[dem average winter Hour15]=Demand[average winter, Hour15] * Hours[average winter, Hour15\
+		] ~~|
+b[dem average winter Hour16]=Demand[average winter, Hour16] * Hours[average winter, Hour16\
+		] ~~|
+b[dem average winter Hour17]=Demand[average winter, Hour17] * Hours[average winter, Hour17\
+		] ~~|
+b[dem average winter Hour18]=Demand[average winter, Hour18] * Hours[average winter, Hour18\
+		] ~~|
+b[dem average winter Hour19]=Demand[average winter, Hour19] * Hours[average winter, Hour19\
+		] ~~|
+b[dem average winter Hour20]=Demand[average winter, Hour20] * Hours[average winter, Hour20\
+		] ~~|
+b[dem average winter Hour21]=Demand[average winter, Hour21] * Hours[average winter, Hour21\
+		] ~~|
+b[dem average winter Hour22]=Demand[average winter, Hour22] * Hours[average winter, Hour22\
+		] ~~|
+b[dem average winter Hour23]=Demand[average winter, Hour23] * Hours[average winter, Hour23\
+		] ~~|
+b[dem average spring Hour0]=Demand[average spring, Hour0] * Hours[average spring, Hour0\
+		] ~~|
+b[dem average spring Hour1]=Demand[average spring, Hour1] * Hours[average spring, Hour1\
+		] ~~|
+b[dem average spring Hour2]=Demand[average spring, Hour2] * Hours[average spring, Hour2\
+		] ~~|
+b[dem average spring Hour3]=Demand[average spring, Hour3] * Hours[average spring, Hour3\
+		] ~~|
+b[dem average spring Hour4]=Demand[average spring, Hour4] * Hours[average spring, Hour4\
+		] ~~|
+b[dem average spring Hour5]=Demand[average spring, Hour5] * Hours[average spring, Hour5\
+		] ~~|
+b[dem average spring Hour6]=Demand[average spring, Hour6] * Hours[average spring, Hour6\
+		] ~~|
+b[dem average spring Hour7]=Demand[average spring, Hour7] * Hours[average spring, Hour7\
+		] ~~|
+b[dem average spring Hour8]=Demand[average spring, Hour8] * Hours[average spring, Hour8\
+		] ~~|
+b[dem average spring Hour9]=Demand[average spring, Hour9] * Hours[average spring, Hour9\
+		] ~~|
+b[dem average spring Hour10]=Demand[average spring, Hour10] * Hours[average spring, Hour10\
+		] ~~|
+b[dem average spring Hour11]=Demand[average spring, Hour11] * Hours[average spring, Hour11\
+		] ~~|
+b[dem average spring Hour12]=Demand[average spring, Hour12] * Hours[average spring, Hour12\
+		] ~~|
+b[dem average spring Hour13]=Demand[average spring, Hour13] * Hours[average spring, Hour13\
+		] ~~|
+b[dem average spring Hour14]=Demand[average spring, Hour14] * Hours[average spring, Hour14\
+		] ~~|
+b[dem average spring Hour15]=Demand[average spring, Hour15] * Hours[average spring, Hour15\
+		] ~~|
+b[dem average spring Hour16]=Demand[average spring, Hour16] * Hours[average spring, Hour16\
+		] ~~|
+b[dem average spring Hour17]=Demand[average spring, Hour17] * Hours[average spring, Hour17\
+		] ~~|
+b[dem average spring Hour18]=Demand[average spring, Hour18] * Hours[average spring, Hour18\
+		] ~~|
+b[dem average spring Hour19]=Demand[average spring, Hour19] * Hours[average spring, Hour19\
+		] ~~|
+b[dem average spring Hour20]=Demand[average spring, Hour20] * Hours[average spring, Hour20\
+		] ~~|
+b[dem average spring Hour21]=Demand[average spring, Hour21] * Hours[average spring, Hour21\
+		] ~~|
+b[dem average spring Hour22]=Demand[average spring, Hour22] * Hours[average spring, Hour22\
+		] ~~|
+b[dem average spring Hour23]=Demand[average spring, Hour23] * Hours[average spring, Hour23\
+		] ~~|
+b[dem average summer Hour0]=Demand[average summer, Hour0] * Hours[average summer, Hour0\
+		] ~~|
+b[dem average summer Hour1]=Demand[average summer, Hour1] * Hours[average summer, Hour1\
+		] ~~|
+b[dem average summer Hour2]=Demand[average summer, Hour2] * Hours[average summer, Hour2\
+		] ~~|
+b[dem average summer Hour3]=Demand[average summer, Hour3] * Hours[average summer, Hour3\
+		] ~~|
+b[dem average summer Hour4]=Demand[average summer, Hour4] * Hours[average summer, Hour4\
+		] ~~|
+b[dem average summer Hour5]=Demand[average summer, Hour5] * Hours[average summer, Hour5\
+		] ~~|
+b[dem average summer Hour6]=Demand[average summer, Hour6] * Hours[average summer, Hour6\
+		] ~~|
+b[dem average summer Hour7]=Demand[average summer, Hour7] * Hours[average summer, Hour7\
+		] ~~|
+b[dem average summer Hour8]=Demand[average summer, Hour8] * Hours[average summer, Hour8\
+		] ~~|
+b[dem average summer Hour9]=Demand[average summer, Hour9] * Hours[average summer, Hour9\
+		] ~~|
+b[dem average summer Hour10]=Demand[average summer, Hour10] * Hours[average summer, Hour10\
+		] ~~|
+b[dem average summer Hour11]=Demand[average summer, Hour11] * Hours[average summer, Hour11\
+		] ~~|
+b[dem average summer Hour12]=Demand[average summer, Hour12] * Hours[average summer, Hour12\
+		] ~~|
+b[dem average summer Hour13]=Demand[average summer, Hour13] * Hours[average summer, Hour13\
+		] ~~|
+b[dem average summer Hour14]=Demand[average summer, Hour14] * Hours[average summer, Hour14\
+		] ~~|
+b[dem average summer Hour15]=Demand[average summer, Hour15] * Hours[average summer, Hour15\
+		] ~~|
+b[dem average summer Hour16]=Demand[average summer, Hour16] * Hours[average summer, Hour16\
+		] ~~|
+b[dem average summer Hour17]=Demand[average summer, Hour17] * Hours[average summer, Hour17\
+		] ~~|
+b[dem average summer Hour18]=Demand[average summer, Hour18] * Hours[average summer, Hour18\
+		] ~~|
+b[dem average summer Hour19]=Demand[average summer, Hour19] * Hours[average summer, Hour19\
+		] ~~|
+b[dem average summer Hour20]=Demand[average summer, Hour20] * Hours[average summer, Hour20\
+		] ~~|
+b[dem average summer Hour21]=Demand[average summer, Hour21] * Hours[average summer, Hour21\
+		] ~~|
+b[dem average summer Hour22]=Demand[average summer, Hour22] * Hours[average summer, Hour22\
+		] ~~|
+b[dem average summer Hour23]=Demand[average summer, Hour23] * Hours[average summer, Hour23\
+		] ~~|
+b[dem average fall Hour0]=Demand[average fall, Hour0] * Hours[average fall, Hour0] ~~|
+b[dem average fall Hour1]=Demand[average fall, Hour1] * Hours[average fall, Hour1] ~~|
+b[dem average fall Hour2]=Demand[average fall, Hour2] * Hours[average fall, Hour2] ~~|
+b[dem average fall Hour3]=Demand[average fall, Hour3] * Hours[average fall, Hour3] ~~|
+b[dem average fall Hour4]=Demand[average fall, Hour4] * Hours[average fall, Hour4] ~~|
+b[dem average fall Hour5]=Demand[average fall, Hour5] * Hours[average fall, Hour5] ~~|
+b[dem average fall Hour6]=Demand[average fall, Hour6] * Hours[average fall, Hour6] ~~|
+b[dem average fall Hour7]=Demand[average fall, Hour7] * Hours[average fall, Hour7] ~~|
+b[dem average fall Hour8]=Demand[average fall, Hour8] * Hours[average fall, Hour8] ~~|
+b[dem average fall Hour9]=Demand[average fall, Hour9] * Hours[average fall, Hour9] ~~|
+b[dem average fall Hour10]=Demand[average fall, Hour10] * Hours[average fall, Hour10]\
+		 ~~|
+b[dem average fall Hour11]=Demand[average fall, Hour11] * Hours[average fall, Hour11]\
+		 ~~|
+b[dem average fall Hour12]=Demand[average fall, Hour12] * Hours[average fall, Hour12]\
+		 ~~|
+b[dem average fall Hour13]=Demand[average fall, Hour13] * Hours[average fall, Hour13]\
+		 ~~|
+b[dem average fall Hour14]=Demand[average fall, Hour14] * Hours[average fall, Hour14]\
+		 ~~|
+b[dem average fall Hour15]=Demand[average fall, Hour15] * Hours[average fall, Hour15]\
+		 ~~|
+b[dem average fall Hour16]=Demand[average fall, Hour16] * Hours[average fall, Hour16]\
+		 ~~|
+b[dem average fall Hour17]=Demand[average fall, Hour17] * Hours[average fall, Hour17]\
+		 ~~|
+b[dem average fall Hour18]=Demand[average fall, Hour18] * Hours[average fall, Hour18]\
+		 ~~|
+b[dem average fall Hour19]=Demand[average fall, Hour19] * Hours[average fall, Hour19]\
+		 ~~|
+b[dem average fall Hour20]=Demand[average fall, Hour20] * Hours[average fall, Hour20]\
+		 ~~|
+b[dem average fall Hour21]=Demand[average fall, Hour21] * Hours[average fall, Hour21]\
+		 ~~|
+b[dem average fall Hour22]=Demand[average fall, Hour22] * Hours[average fall, Hour22]\
+		 ~~|
+b[dem average fall Hour23]=Demand[average fall, Hour23] * Hours[average fall, Hour23]\
+		 ~~|
+b[dem peak summer Hour0]=Demand[peak summer, Hour0] * Hours[peak summer, Hour0] ~~|
+b[dem peak summer Hour1]=Demand[peak summer, Hour1] * Hours[peak summer, Hour1] ~~|
+b[dem peak summer Hour2]=Demand[peak summer, Hour2] * Hours[peak summer, Hour2] ~~|
+b[dem peak summer Hour3]=Demand[peak summer, Hour3] * Hours[peak summer, Hour3] ~~|
+b[dem peak summer Hour4]=Demand[peak summer, Hour4] * Hours[peak summer, Hour4] ~~|
+b[dem peak summer Hour5]=Demand[peak summer, Hour5] * Hours[peak summer, Hour5] ~~|
+b[dem peak summer Hour6]=Demand[peak summer, Hour6] * Hours[peak summer, Hour6] ~~|
+b[dem peak summer Hour7]=Demand[peak summer, Hour7] * Hours[peak summer, Hour7] ~~|
+b[dem peak summer Hour8]=Demand[peak summer, Hour8] * Hours[peak summer, Hour8] ~~|
+b[dem peak summer Hour9]=Demand[peak summer, Hour9] * Hours[peak summer, Hour9] ~~|
+b[dem peak summer Hour10]=Demand[peak summer, Hour10] * Hours[peak summer, Hour10] ~~|
+b[dem peak summer Hour11]=Demand[peak summer, Hour11] * Hours[peak summer, Hour11] ~~|
+b[dem peak summer Hour12]=Demand[peak summer, Hour12] * Hours[peak summer, Hour12] ~~|
+b[dem peak summer Hour13]=Demand[peak summer, Hour13] * Hours[peak summer, Hour13] ~~|
+b[dem peak summer Hour14]=Demand[peak summer, Hour14] * Hours[peak summer, Hour14] ~~|
+b[dem peak summer Hour15]=Demand[peak summer, Hour15] * Hours[peak summer, Hour15] ~~|
+b[dem peak summer Hour16]=Demand[peak summer, Hour16] * Hours[peak summer, Hour16] ~~|
+b[dem peak summer Hour17]=Demand[peak summer, Hour17] * Hours[peak summer, Hour17] ~~|
+b[dem peak summer Hour18]=Demand[peak summer, Hour18] * Hours[peak summer, Hour18] ~~|
+b[dem peak summer Hour19]=Demand[peak summer, Hour19] * Hours[peak summer, Hour19] ~~|
+b[dem peak summer Hour20]=Demand[peak summer, Hour20] * Hours[peak summer, Hour20] ~~|
+b[dem peak summer Hour21]=Demand[peak summer, Hour21] * Hours[peak summer, Hour21] ~~|
+b[dem peak summer Hour22]=Demand[peak summer, Hour22] * Hours[peak summer, Hour22] ~~|
+b[dem peak summer Hour23]=Demand[peak summer, Hour23] * Hours[peak summer, Hour23] ~~|
+b[dem peak winter Hour0]=Demand[peak winter, Hour0] * Hours[peak winter, Hour0] ~~|
+b[dem peak winter Hour1]=Demand[peak winter, Hour1] * Hours[peak winter, Hour1] ~~|
+b[dem peak winter Hour2]=Demand[peak winter, Hour2] * Hours[peak winter, Hour2] ~~|
+b[dem peak winter Hour3]=Demand[peak winter, Hour3] * Hours[peak winter, Hour3] ~~|
+b[dem peak winter Hour4]=Demand[peak winter, Hour4] * Hours[peak winter, Hour4] ~~|
+b[dem peak winter Hour5]=Demand[peak winter, Hour5] * Hours[peak winter, Hour5] ~~|
+b[dem peak winter Hour6]=Demand[peak winter, Hour6] * Hours[peak winter, Hour6] ~~|
+b[dem peak winter Hour7]=Demand[peak winter, Hour7] * Hours[peak winter, Hour7] ~~|
+b[dem peak winter Hour8]=Demand[peak winter, Hour8] * Hours[peak winter, Hour8] ~~|
+b[dem peak winter Hour9]=Demand[peak winter, Hour9] * Hours[peak winter, Hour9] ~~|
+b[dem peak winter Hour10]=Demand[peak winter, Hour10] * Hours[peak winter, Hour10] ~~|
+b[dem peak winter Hour11]=Demand[peak winter, Hour11] * Hours[peak winter, Hour11] ~~|
+b[dem peak winter Hour12]=Demand[peak winter, Hour12] * Hours[peak winter, Hour12] ~~|
+b[dem peak winter Hour13]=Demand[peak winter, Hour13] * Hours[peak winter, Hour13] ~~|
+b[dem peak winter Hour14]=Demand[peak winter, Hour14] * Hours[peak winter, Hour14] ~~|
+b[dem peak winter Hour15]=Demand[peak winter, Hour15] * Hours[peak winter, Hour15] ~~|
+b[dem peak winter Hour16]=Demand[peak winter, Hour16] * Hours[peak winter, Hour16] ~~|
+b[dem peak winter Hour17]=Demand[peak winter, Hour17] * Hours[peak winter, Hour17] ~~|
+b[dem peak winter Hour18]=Demand[peak winter, Hour18] * Hours[peak winter, Hour18] ~~|
+b[dem peak winter Hour19]=Demand[peak winter, Hour19] * Hours[peak winter, Hour19] ~~|
+b[dem peak winter Hour20]=Demand[peak winter, Hour20] * Hours[peak winter, Hour20] ~~|
+b[dem peak winter Hour21]=Demand[peak winter, Hour21] * Hours[peak winter, Hour21] ~~|
+b[dem peak winter Hour22]=Demand[peak winter, Hour22] * Hours[peak winter, Hour22] ~~|
+b[dem peak winter Hour23]=Demand[peak winter, Hour23] * Hours[peak winter, Hour23] ~~|
+b[cap gasCC average winter Hour0]=Capacity Factor[gasCC, average winter, Hour0] * Hours\
+		[average winter, Hour0] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour1]=Capacity Factor[gasCC, average winter, Hour1] * Hours\
+		[average winter, Hour1] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour2]=Capacity Factor[gasCC, average winter, Hour2] * Hours\
+		[average winter, Hour2] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour3]=Capacity Factor[gasCC, average winter, Hour3] * Hours\
+		[average winter, Hour3] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour4]=Capacity Factor[gasCC, average winter, Hour4] * Hours\
+		[average winter, Hour4] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour5]=Capacity Factor[gasCC, average winter, Hour5] * Hours\
+		[average winter, Hour5] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour6]=Capacity Factor[gasCC, average winter, Hour6] * Hours\
+		[average winter, Hour6] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour7]=Capacity Factor[gasCC, average winter, Hour7] * Hours\
+		[average winter, Hour7] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour8]=Capacity Factor[gasCC, average winter, Hour8] * Hours\
+		[average winter, Hour8] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour9]=Capacity Factor[gasCC, average winter, Hour9] * Hours\
+		[average winter, Hour9] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour10]=Capacity Factor[gasCC, average winter, Hour10] * Hours\
+		[average winter, Hour10] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour11]=Capacity Factor[gasCC, average winter, Hour11] * Hours\
+		[average winter, Hour11] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour12]=Capacity Factor[gasCC, average winter, Hour12] * Hours\
+		[average winter, Hour12] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour13]=Capacity Factor[gasCC, average winter, Hour13] * Hours\
+		[average winter, Hour13] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour14]=Capacity Factor[gasCC, average winter, Hour14] * Hours\
+		[average winter, Hour14] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour15]=Capacity Factor[gasCC, average winter, Hour15] * Hours\
+		[average winter, Hour15] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour16]=Capacity Factor[gasCC, average winter, Hour16] * Hours\
+		[average winter, Hour16] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour17]=Capacity Factor[gasCC, average winter, Hour17] * Hours\
+		[average winter, Hour17] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour18]=Capacity Factor[gasCC, average winter, Hour18] * Hours\
+		[average winter, Hour18] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour19]=Capacity Factor[gasCC, average winter, Hour19] * Hours\
+		[average winter, Hour19] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour20]=Capacity Factor[gasCC, average winter, Hour20] * Hours\
+		[average winter, Hour20] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour21]=Capacity Factor[gasCC, average winter, Hour21] * Hours\
+		[average winter, Hour21] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour22]=Capacity Factor[gasCC, average winter, Hour22] * Hours\
+		[average winter, Hour22] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average winter Hour23]=Capacity Factor[gasCC, average winter, Hour23] * Hours\
+		[average winter, Hour23] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour0]=Capacity Factor[gasCC, average spring, Hour0] * Hours\
+		[average spring, Hour0] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour1]=Capacity Factor[gasCC, average spring, Hour1] * Hours\
+		[average spring, Hour1] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour2]=Capacity Factor[gasCC, average spring, Hour2] * Hours\
+		[average spring, Hour2] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour3]=Capacity Factor[gasCC, average spring, Hour3] * Hours\
+		[average spring, Hour3] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour4]=Capacity Factor[gasCC, average spring, Hour4] * Hours\
+		[average spring, Hour4] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour5]=Capacity Factor[gasCC, average spring, Hour5] * Hours\
+		[average spring, Hour5] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour6]=Capacity Factor[gasCC, average spring, Hour6] * Hours\
+		[average spring, Hour6] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour7]=Capacity Factor[gasCC, average spring, Hour7] * Hours\
+		[average spring, Hour7] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour8]=Capacity Factor[gasCC, average spring, Hour8] * Hours\
+		[average spring, Hour8] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour9]=Capacity Factor[gasCC, average spring, Hour9] * Hours\
+		[average spring, Hour9] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour10]=Capacity Factor[gasCC, average spring, Hour10] * Hours\
+		[average spring, Hour10] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour11]=Capacity Factor[gasCC, average spring, Hour11] * Hours\
+		[average spring, Hour11] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour12]=Capacity Factor[gasCC, average spring, Hour12] * Hours\
+		[average spring, Hour12] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour13]=Capacity Factor[gasCC, average spring, Hour13] * Hours\
+		[average spring, Hour13] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour14]=Capacity Factor[gasCC, average spring, Hour14] * Hours\
+		[average spring, Hour14] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour15]=Capacity Factor[gasCC, average spring, Hour15] * Hours\
+		[average spring, Hour15] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour16]=Capacity Factor[gasCC, average spring, Hour16] * Hours\
+		[average spring, Hour16] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour17]=Capacity Factor[gasCC, average spring, Hour17] * Hours\
+		[average spring, Hour17] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour18]=Capacity Factor[gasCC, average spring, Hour18] * Hours\
+		[average spring, Hour18] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour19]=Capacity Factor[gasCC, average spring, Hour19] * Hours\
+		[average spring, Hour19] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour20]=Capacity Factor[gasCC, average spring, Hour20] * Hours\
+		[average spring, Hour20] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour21]=Capacity Factor[gasCC, average spring, Hour21] * Hours\
+		[average spring, Hour21] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour22]=Capacity Factor[gasCC, average spring, Hour22] * Hours\
+		[average spring, Hour22] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average spring Hour23]=Capacity Factor[gasCC, average spring, Hour23] * Hours\
+		[average spring, Hour23] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour0]=Capacity Factor[gasCC, average summer, Hour0] * Hours\
+		[average summer, Hour0] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour1]=Capacity Factor[gasCC, average summer, Hour1] * Hours\
+		[average summer, Hour1] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour2]=Capacity Factor[gasCC, average summer, Hour2] * Hours\
+		[average summer, Hour2] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour3]=Capacity Factor[gasCC, average summer, Hour3] * Hours\
+		[average summer, Hour3] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour4]=Capacity Factor[gasCC, average summer, Hour4] * Hours\
+		[average summer, Hour4] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour5]=Capacity Factor[gasCC, average summer, Hour5] * Hours\
+		[average summer, Hour5] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour6]=Capacity Factor[gasCC, average summer, Hour6] * Hours\
+		[average summer, Hour6] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour7]=Capacity Factor[gasCC, average summer, Hour7] * Hours\
+		[average summer, Hour7] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour8]=Capacity Factor[gasCC, average summer, Hour8] * Hours\
+		[average summer, Hour8] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour9]=Capacity Factor[gasCC, average summer, Hour9] * Hours\
+		[average summer, Hour9] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour10]=Capacity Factor[gasCC, average summer, Hour10] * Hours\
+		[average summer, Hour10] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour11]=Capacity Factor[gasCC, average summer, Hour11] * Hours\
+		[average summer, Hour11] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour12]=Capacity Factor[gasCC, average summer, Hour12] * Hours\
+		[average summer, Hour12] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour13]=Capacity Factor[gasCC, average summer, Hour13] * Hours\
+		[average summer, Hour13] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour14]=Capacity Factor[gasCC, average summer, Hour14] * Hours\
+		[average summer, Hour14] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour15]=Capacity Factor[gasCC, average summer, Hour15] * Hours\
+		[average summer, Hour15] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour16]=Capacity Factor[gasCC, average summer, Hour16] * Hours\
+		[average summer, Hour16] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour17]=Capacity Factor[gasCC, average summer, Hour17] * Hours\
+		[average summer, Hour17] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour18]=Capacity Factor[gasCC, average summer, Hour18] * Hours\
+		[average summer, Hour18] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour19]=Capacity Factor[gasCC, average summer, Hour19] * Hours\
+		[average summer, Hour19] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour20]=Capacity Factor[gasCC, average summer, Hour20] * Hours\
+		[average summer, Hour20] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour21]=Capacity Factor[gasCC, average summer, Hour21] * Hours\
+		[average summer, Hour21] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour22]=Capacity Factor[gasCC, average summer, Hour22] * Hours\
+		[average summer, Hour22] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average summer Hour23]=Capacity Factor[gasCC, average summer, Hour23] * Hours\
+		[average summer, Hour23] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour0]=Capacity Factor[gasCC, average fall, Hour0] * Hours[average fall\
+		, Hour0] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour1]=Capacity Factor[gasCC, average fall, Hour1] * Hours[average fall\
+		, Hour1] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour2]=Capacity Factor[gasCC, average fall, Hour2] * Hours[average fall\
+		, Hour2] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour3]=Capacity Factor[gasCC, average fall, Hour3] * Hours[average fall\
+		, Hour3] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour4]=Capacity Factor[gasCC, average fall, Hour4] * Hours[average fall\
+		, Hour4] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour5]=Capacity Factor[gasCC, average fall, Hour5] * Hours[average fall\
+		, Hour5] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour6]=Capacity Factor[gasCC, average fall, Hour6] * Hours[average fall\
+		, Hour6] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour7]=Capacity Factor[gasCC, average fall, Hour7] * Hours[average fall\
+		, Hour7] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour8]=Capacity Factor[gasCC, average fall, Hour8] * Hours[average fall\
+		, Hour8] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour9]=Capacity Factor[gasCC, average fall, Hour9] * Hours[average fall\
+		, Hour9] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour10]=Capacity Factor[gasCC, average fall, Hour10] * Hours\
+		[average fall, Hour10] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour11]=Capacity Factor[gasCC, average fall, Hour11] * Hours\
+		[average fall, Hour11] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour12]=Capacity Factor[gasCC, average fall, Hour12] * Hours\
+		[average fall, Hour12] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour13]=Capacity Factor[gasCC, average fall, Hour13] * Hours\
+		[average fall, Hour13] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour14]=Capacity Factor[gasCC, average fall, Hour14] * Hours\
+		[average fall, Hour14] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour15]=Capacity Factor[gasCC, average fall, Hour15] * Hours\
+		[average fall, Hour15] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour16]=Capacity Factor[gasCC, average fall, Hour16] * Hours\
+		[average fall, Hour16] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour17]=Capacity Factor[gasCC, average fall, Hour17] * Hours\
+		[average fall, Hour17] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour18]=Capacity Factor[gasCC, average fall, Hour18] * Hours\
+		[average fall, Hour18] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour19]=Capacity Factor[gasCC, average fall, Hour19] * Hours\
+		[average fall, Hour19] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour20]=Capacity Factor[gasCC, average fall, Hour20] * Hours\
+		[average fall, Hour20] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour21]=Capacity Factor[gasCC, average fall, Hour21] * Hours\
+		[average fall, Hour21] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour22]=Capacity Factor[gasCC, average fall, Hour22] * Hours\
+		[average fall, Hour22] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC average fall Hour23]=Capacity Factor[gasCC, average fall, Hour23] * Hours\
+		[average fall, Hour23] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour0]=Capacity Factor[gasCC, peak summer, Hour0] * Hours[peak summer\
+		, Hour0] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour1]=Capacity Factor[gasCC, peak summer, Hour1] * Hours[peak summer\
+		, Hour1] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour2]=Capacity Factor[gasCC, peak summer, Hour2] * Hours[peak summer\
+		, Hour2] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour3]=Capacity Factor[gasCC, peak summer, Hour3] * Hours[peak summer\
+		, Hour3] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour4]=Capacity Factor[gasCC, peak summer, Hour4] * Hours[peak summer\
+		, Hour4] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour5]=Capacity Factor[gasCC, peak summer, Hour5] * Hours[peak summer\
+		, Hour5] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour6]=Capacity Factor[gasCC, peak summer, Hour6] * Hours[peak summer\
+		, Hour6] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour7]=Capacity Factor[gasCC, peak summer, Hour7] * Hours[peak summer\
+		, Hour7] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour8]=Capacity Factor[gasCC, peak summer, Hour8] * Hours[peak summer\
+		, Hour8] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour9]=Capacity Factor[gasCC, peak summer, Hour9] * Hours[peak summer\
+		, Hour9] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour10]=Capacity Factor[gasCC, peak summer, Hour10] * Hours[peak summer\
+		, Hour10] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour11]=Capacity Factor[gasCC, peak summer, Hour11] * Hours[peak summer\
+		, Hour11] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour12]=Capacity Factor[gasCC, peak summer, Hour12] * Hours[peak summer\
+		, Hour12] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour13]=Capacity Factor[gasCC, peak summer, Hour13] * Hours[peak summer\
+		, Hour13] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour14]=Capacity Factor[gasCC, peak summer, Hour14] * Hours[peak summer\
+		, Hour14] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour15]=Capacity Factor[gasCC, peak summer, Hour15] * Hours[peak summer\
+		, Hour15] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour16]=Capacity Factor[gasCC, peak summer, Hour16] * Hours[peak summer\
+		, Hour16] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour17]=Capacity Factor[gasCC, peak summer, Hour17] * Hours[peak summer\
+		, Hour17] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour18]=Capacity Factor[gasCC, peak summer, Hour18] * Hours[peak summer\
+		, Hour18] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour19]=Capacity Factor[gasCC, peak summer, Hour19] * Hours[peak summer\
+		, Hour19] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour20]=Capacity Factor[gasCC, peak summer, Hour20] * Hours[peak summer\
+		, Hour20] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour21]=Capacity Factor[gasCC, peak summer, Hour21] * Hours[peak summer\
+		, Hour21] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour22]=Capacity Factor[gasCC, peak summer, Hour22] * Hours[peak summer\
+		, Hour22] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak summer Hour23]=Capacity Factor[gasCC, peak summer, Hour23] * Hours[peak summer\
+		, Hour23] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour0]=Capacity Factor[gasCC, peak winter, Hour0] * Hours[peak winter\
+		, Hour0] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour1]=Capacity Factor[gasCC, peak winter, Hour1] * Hours[peak winter\
+		, Hour1] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour2]=Capacity Factor[gasCC, peak winter, Hour2] * Hours[peak winter\
+		, Hour2] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour3]=Capacity Factor[gasCC, peak winter, Hour3] * Hours[peak winter\
+		, Hour3] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour4]=Capacity Factor[gasCC, peak winter, Hour4] * Hours[peak winter\
+		, Hour4] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour5]=Capacity Factor[gasCC, peak winter, Hour5] * Hours[peak winter\
+		, Hour5] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour6]=Capacity Factor[gasCC, peak winter, Hour6] * Hours[peak winter\
+		, Hour6] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour7]=Capacity Factor[gasCC, peak winter, Hour7] * Hours[peak winter\
+		, Hour7] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour8]=Capacity Factor[gasCC, peak winter, Hour8] * Hours[peak winter\
+		, Hour8] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour9]=Capacity Factor[gasCC, peak winter, Hour9] * Hours[peak winter\
+		, Hour9] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour10]=Capacity Factor[gasCC, peak winter, Hour10] * Hours[peak winter\
+		, Hour10] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour11]=Capacity Factor[gasCC, peak winter, Hour11] * Hours[peak winter\
+		, Hour11] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour12]=Capacity Factor[gasCC, peak winter, Hour12] * Hours[peak winter\
+		, Hour12] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour13]=Capacity Factor[gasCC, peak winter, Hour13] * Hours[peak winter\
+		, Hour13] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour14]=Capacity Factor[gasCC, peak winter, Hour14] * Hours[peak winter\
+		, Hour14] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour15]=Capacity Factor[gasCC, peak winter, Hour15] * Hours[peak winter\
+		, Hour15] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour16]=Capacity Factor[gasCC, peak winter, Hour16] * Hours[peak winter\
+		, Hour16] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour17]=Capacity Factor[gasCC, peak winter, Hour17] * Hours[peak winter\
+		, Hour17] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour18]=Capacity Factor[gasCC, peak winter, Hour18] * Hours[peak winter\
+		, Hour18] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour19]=Capacity Factor[gasCC, peak winter, Hour19] * Hours[peak winter\
+		, Hour19] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour20]=Capacity Factor[gasCC, peak winter, Hour20] * Hours[peak winter\
+		, Hour20] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour21]=Capacity Factor[gasCC, peak winter, Hour21] * Hours[peak winter\
+		, Hour21] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour22]=Capacity Factor[gasCC, peak winter, Hour22] * Hours[peak winter\
+		, Hour22] * Installed Capacity
+[gasCC] ~~|
+b[cap gasCC peak winter Hour23]=Capacity Factor[gasCC, peak winter, Hour23] * Hours[peak winter\
+		, Hour23] * Installed Capacity
+[gasCC] ~~|
+b[cap wind average winter Hour0]=Capacity Factor[wind, average winter, Hour0] * Hours\
+		[average winter, Hour0] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour1]=Capacity Factor[wind, average winter, Hour1] * Hours\
+		[average winter, Hour1] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour2]=Capacity Factor[wind, average winter, Hour2] * Hours\
+		[average winter, Hour2] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour3]=Capacity Factor[wind, average winter, Hour3] * Hours\
+		[average winter, Hour3] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour4]=Capacity Factor[wind, average winter, Hour4] * Hours\
+		[average winter, Hour4] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour5]=Capacity Factor[wind, average winter, Hour5] * Hours\
+		[average winter, Hour5] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour6]=Capacity Factor[wind, average winter, Hour6] * Hours\
+		[average winter, Hour6] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour7]=Capacity Factor[wind, average winter, Hour7] * Hours\
+		[average winter, Hour7] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour8]=Capacity Factor[wind, average winter, Hour8] * Hours\
+		[average winter, Hour8] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour9]=Capacity Factor[wind, average winter, Hour9] * Hours\
+		[average winter, Hour9] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour10]=Capacity Factor[wind, average winter, Hour10] * Hours\
+		[average winter, Hour10] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour11]=Capacity Factor[wind, average winter, Hour11] * Hours\
+		[average winter, Hour11] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour12]=Capacity Factor[wind, average winter, Hour12] * Hours\
+		[average winter, Hour12] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour13]=Capacity Factor[wind, average winter, Hour13] * Hours\
+		[average winter, Hour13] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour14]=Capacity Factor[wind, average winter, Hour14] * Hours\
+		[average winter, Hour14] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour15]=Capacity Factor[wind, average winter, Hour15] * Hours\
+		[average winter, Hour15] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour16]=Capacity Factor[wind, average winter, Hour16] * Hours\
+		[average winter, Hour16] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour17]=Capacity Factor[wind, average winter, Hour17] * Hours\
+		[average winter, Hour17] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour18]=Capacity Factor[wind, average winter, Hour18] * Hours\
+		[average winter, Hour18] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour19]=Capacity Factor[wind, average winter, Hour19] * Hours\
+		[average winter, Hour19] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour20]=Capacity Factor[wind, average winter, Hour20] * Hours\
+		[average winter, Hour20] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour21]=Capacity Factor[wind, average winter, Hour21] * Hours\
+		[average winter, Hour21] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour22]=Capacity Factor[wind, average winter, Hour22] * Hours\
+		[average winter, Hour22] * Installed Capacity
+[wind] ~~|
+b[cap wind average winter Hour23]=Capacity Factor[wind, average winter, Hour23] * Hours\
+		[average winter, Hour23] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour0]=Capacity Factor[wind, average spring, Hour0] * Hours\
+		[average spring, Hour0] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour1]=Capacity Factor[wind, average spring, Hour1] * Hours\
+		[average spring, Hour1] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour2]=Capacity Factor[wind, average spring, Hour2] * Hours\
+		[average spring, Hour2] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour3]=Capacity Factor[wind, average spring, Hour3] * Hours\
+		[average spring, Hour3] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour4]=Capacity Factor[wind, average spring, Hour4] * Hours\
+		[average spring, Hour4] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour5]=Capacity Factor[wind, average spring, Hour5] * Hours\
+		[average spring, Hour5] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour6]=Capacity Factor[wind, average spring, Hour6] * Hours\
+		[average spring, Hour6] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour7]=Capacity Factor[wind, average spring, Hour7] * Hours\
+		[average spring, Hour7] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour8]=Capacity Factor[wind, average spring, Hour8] * Hours\
+		[average spring, Hour8] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour9]=Capacity Factor[wind, average spring, Hour9] * Hours\
+		[average spring, Hour9] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour10]=Capacity Factor[wind, average spring, Hour10] * Hours\
+		[average spring, Hour10] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour11]=Capacity Factor[wind, average spring, Hour11] * Hours\
+		[average spring, Hour11] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour12]=Capacity Factor[wind, average spring, Hour12] * Hours\
+		[average spring, Hour12] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour13]=Capacity Factor[wind, average spring, Hour13] * Hours\
+		[average spring, Hour13] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour14]=Capacity Factor[wind, average spring, Hour14] * Hours\
+		[average spring, Hour14] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour15]=Capacity Factor[wind, average spring, Hour15] * Hours\
+		[average spring, Hour15] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour16]=Capacity Factor[wind, average spring, Hour16] * Hours\
+		[average spring, Hour16] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour17]=Capacity Factor[wind, average spring, Hour17] * Hours\
+		[average spring, Hour17] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour18]=Capacity Factor[wind, average spring, Hour18] * Hours\
+		[average spring, Hour18] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour19]=Capacity Factor[wind, average spring, Hour19] * Hours\
+		[average spring, Hour19] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour20]=Capacity Factor[wind, average spring, Hour20] * Hours\
+		[average spring, Hour20] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour21]=Capacity Factor[wind, average spring, Hour21] * Hours\
+		[average spring, Hour21] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour22]=Capacity Factor[wind, average spring, Hour22] * Hours\
+		[average spring, Hour22] * Installed Capacity
+[wind] ~~|
+b[cap wind average spring Hour23]=Capacity Factor[wind, average spring, Hour23] * Hours\
+		[average spring, Hour23] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour0]=Capacity Factor[wind, average summer, Hour0] * Hours\
+		[average summer, Hour0] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour1]=Capacity Factor[wind, average summer, Hour1] * Hours\
+		[average summer, Hour1] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour2]=Capacity Factor[wind, average summer, Hour2] * Hours\
+		[average summer, Hour2] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour3]=Capacity Factor[wind, average summer, Hour3] * Hours\
+		[average summer, Hour3] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour4]=Capacity Factor[wind, average summer, Hour4] * Hours\
+		[average summer, Hour4] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour5]=Capacity Factor[wind, average summer, Hour5] * Hours\
+		[average summer, Hour5] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour6]=Capacity Factor[wind, average summer, Hour6] * Hours\
+		[average summer, Hour6] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour7]=Capacity Factor[wind, average summer, Hour7] * Hours\
+		[average summer, Hour7] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour8]=Capacity Factor[wind, average summer, Hour8] * Hours\
+		[average summer, Hour8] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour9]=Capacity Factor[wind, average summer, Hour9] * Hours\
+		[average summer, Hour9] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour10]=Capacity Factor[wind, average summer, Hour10] * Hours\
+		[average summer, Hour10] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour11]=Capacity Factor[wind, average summer, Hour11] * Hours\
+		[average summer, Hour11] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour12]=Capacity Factor[wind, average summer, Hour12] * Hours\
+		[average summer, Hour12] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour13]=Capacity Factor[wind, average summer, Hour13] * Hours\
+		[average summer, Hour13] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour14]=Capacity Factor[wind, average summer, Hour14] * Hours\
+		[average summer, Hour14] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour15]=Capacity Factor[wind, average summer, Hour15] * Hours\
+		[average summer, Hour15] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour16]=Capacity Factor[wind, average summer, Hour16] * Hours\
+		[average summer, Hour16] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour17]=Capacity Factor[wind, average summer, Hour17] * Hours\
+		[average summer, Hour17] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour18]=Capacity Factor[wind, average summer, Hour18] * Hours\
+		[average summer, Hour18] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour19]=Capacity Factor[wind, average summer, Hour19] * Hours\
+		[average summer, Hour19] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour20]=Capacity Factor[wind, average summer, Hour20] * Hours\
+		[average summer, Hour20] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour21]=Capacity Factor[wind, average summer, Hour21] * Hours\
+		[average summer, Hour21] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour22]=Capacity Factor[wind, average summer, Hour22] * Hours\
+		[average summer, Hour22] * Installed Capacity
+[wind] ~~|
+b[cap wind average summer Hour23]=Capacity Factor[wind, average summer, Hour23] * Hours\
+		[average summer, Hour23] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour0]=Capacity Factor[wind, average fall, Hour0] * Hours[average fall\
+		, Hour0] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour1]=Capacity Factor[wind, average fall, Hour1] * Hours[average fall\
+		, Hour1] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour2]=Capacity Factor[wind, average fall, Hour2] * Hours[average fall\
+		, Hour2] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour3]=Capacity Factor[wind, average fall, Hour3] * Hours[average fall\
+		, Hour3] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour4]=Capacity Factor[wind, average fall, Hour4] * Hours[average fall\
+		, Hour4] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour5]=Capacity Factor[wind, average fall, Hour5] * Hours[average fall\
+		, Hour5] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour6]=Capacity Factor[wind, average fall, Hour6] * Hours[average fall\
+		, Hour6] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour7]=Capacity Factor[wind, average fall, Hour7] * Hours[average fall\
+		, Hour7] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour8]=Capacity Factor[wind, average fall, Hour8] * Hours[average fall\
+		, Hour8] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour9]=Capacity Factor[wind, average fall, Hour9] * Hours[average fall\
+		, Hour9] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour10]=Capacity Factor[wind, average fall, Hour10] * Hours[average fall\
+		, Hour10] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour11]=Capacity Factor[wind, average fall, Hour11] * Hours[average fall\
+		, Hour11] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour12]=Capacity Factor[wind, average fall, Hour12] * Hours[average fall\
+		, Hour12] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour13]=Capacity Factor[wind, average fall, Hour13] * Hours[average fall\
+		, Hour13] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour14]=Capacity Factor[wind, average fall, Hour14] * Hours[average fall\
+		, Hour14] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour15]=Capacity Factor[wind, average fall, Hour15] * Hours[average fall\
+		, Hour15] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour16]=Capacity Factor[wind, average fall, Hour16] * Hours[average fall\
+		, Hour16] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour17]=Capacity Factor[wind, average fall, Hour17] * Hours[average fall\
+		, Hour17] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour18]=Capacity Factor[wind, average fall, Hour18] * Hours[average fall\
+		, Hour18] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour19]=Capacity Factor[wind, average fall, Hour19] * Hours[average fall\
+		, Hour19] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour20]=Capacity Factor[wind, average fall, Hour20] * Hours[average fall\
+		, Hour20] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour21]=Capacity Factor[wind, average fall, Hour21] * Hours[average fall\
+		, Hour21] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour22]=Capacity Factor[wind, average fall, Hour22] * Hours[average fall\
+		, Hour22] * Installed Capacity
+[wind] ~~|
+b[cap wind average fall Hour23]=Capacity Factor[wind, average fall, Hour23] * Hours[average fall\
+		, Hour23] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour0]=Capacity Factor[wind, peak summer, Hour0] * Hours[peak summer\
+		, Hour0] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour1]=Capacity Factor[wind, peak summer, Hour1] * Hours[peak summer\
+		, Hour1] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour2]=Capacity Factor[wind, peak summer, Hour2] * Hours[peak summer\
+		, Hour2] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour3]=Capacity Factor[wind, peak summer, Hour3] * Hours[peak summer\
+		, Hour3] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour4]=Capacity Factor[wind, peak summer, Hour4] * Hours[peak summer\
+		, Hour4] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour5]=Capacity Factor[wind, peak summer, Hour5] * Hours[peak summer\
+		, Hour5] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour6]=Capacity Factor[wind, peak summer, Hour6] * Hours[peak summer\
+		, Hour6] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour7]=Capacity Factor[wind, peak summer, Hour7] * Hours[peak summer\
+		, Hour7] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour8]=Capacity Factor[wind, peak summer, Hour8] * Hours[peak summer\
+		, Hour8] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour9]=Capacity Factor[wind, peak summer, Hour9] * Hours[peak summer\
+		, Hour9] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour10]=Capacity Factor[wind, peak summer, Hour10] * Hours[peak summer\
+		, Hour10] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour11]=Capacity Factor[wind, peak summer, Hour11] * Hours[peak summer\
+		, Hour11] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour12]=Capacity Factor[wind, peak summer, Hour12] * Hours[peak summer\
+		, Hour12] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour13]=Capacity Factor[wind, peak summer, Hour13] * Hours[peak summer\
+		, Hour13] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour14]=Capacity Factor[wind, peak summer, Hour14] * Hours[peak summer\
+		, Hour14] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour15]=Capacity Factor[wind, peak summer, Hour15] * Hours[peak summer\
+		, Hour15] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour16]=Capacity Factor[wind, peak summer, Hour16] * Hours[peak summer\
+		, Hour16] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour17]=Capacity Factor[wind, peak summer, Hour17] * Hours[peak summer\
+		, Hour17] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour18]=Capacity Factor[wind, peak summer, Hour18] * Hours[peak summer\
+		, Hour18] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour19]=Capacity Factor[wind, peak summer, Hour19] * Hours[peak summer\
+		, Hour19] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour20]=Capacity Factor[wind, peak summer, Hour20] * Hours[peak summer\
+		, Hour20] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour21]=Capacity Factor[wind, peak summer, Hour21] * Hours[peak summer\
+		, Hour21] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour22]=Capacity Factor[wind, peak summer, Hour22] * Hours[peak summer\
+		, Hour22] * Installed Capacity
+[wind] ~~|
+b[cap wind peak summer Hour23]=Capacity Factor[wind, peak summer, Hour23] * Hours[peak summer\
+		, Hour23] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour0]=Capacity Factor[wind, peak winter, Hour0] * Hours[peak winter\
+		, Hour0] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour1]=Capacity Factor[wind, peak winter, Hour1] * Hours[peak winter\
+		, Hour1] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour2]=Capacity Factor[wind, peak winter, Hour2] * Hours[peak winter\
+		, Hour2] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour3]=Capacity Factor[wind, peak winter, Hour3] * Hours[peak winter\
+		, Hour3] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour4]=Capacity Factor[wind, peak winter, Hour4] * Hours[peak winter\
+		, Hour4] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour5]=Capacity Factor[wind, peak winter, Hour5] * Hours[peak winter\
+		, Hour5] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour6]=Capacity Factor[wind, peak winter, Hour6] * Hours[peak winter\
+		, Hour6] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour7]=Capacity Factor[wind, peak winter, Hour7] * Hours[peak winter\
+		, Hour7] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour8]=Capacity Factor[wind, peak winter, Hour8] * Hours[peak winter\
+		, Hour8] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour9]=Capacity Factor[wind, peak winter, Hour9] * Hours[peak winter\
+		, Hour9] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour10]=Capacity Factor[wind, peak winter, Hour10] * Hours[peak winter\
+		, Hour10] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour11]=Capacity Factor[wind, peak winter, Hour11] * Hours[peak winter\
+		, Hour11] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour12]=Capacity Factor[wind, peak winter, Hour12] * Hours[peak winter\
+		, Hour12] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour13]=Capacity Factor[wind, peak winter, Hour13] * Hours[peak winter\
+		, Hour13] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour14]=Capacity Factor[wind, peak winter, Hour14] * Hours[peak winter\
+		, Hour14] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour15]=Capacity Factor[wind, peak winter, Hour15] * Hours[peak winter\
+		, Hour15] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour16]=Capacity Factor[wind, peak winter, Hour16] * Hours[peak winter\
+		, Hour16] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour17]=Capacity Factor[wind, peak winter, Hour17] * Hours[peak winter\
+		, Hour17] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour18]=Capacity Factor[wind, peak winter, Hour18] * Hours[peak winter\
+		, Hour18] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour19]=Capacity Factor[wind, peak winter, Hour19] * Hours[peak winter\
+		, Hour19] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour20]=Capacity Factor[wind, peak winter, Hour20] * Hours[peak winter\
+		, Hour20] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour21]=Capacity Factor[wind, peak winter, Hour21] * Hours[peak winter\
+		, Hour21] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour22]=Capacity Factor[wind, peak winter, Hour22] * Hours[peak winter\
+		, Hour22] * Installed Capacity
+[wind] ~~|
+b[cap wind peak winter Hour23]=Capacity Factor[wind, peak winter, Hour23] * Hours[peak winter\
+		, Hour23] * Installed Capacity
+[wind]
+	~	
+	~		|
+
+build subrange:
+	build gasCC,
+	build wind
+	~	
+	~		|
+
+cap gasCC subrange:
+	(cap gasCC average winter Hour0-cap gasCC average winter Hour23),
+	(cap gasCC average spring Hour0-cap gasCC average spring Hour23),
+	(cap gasCC average summer Hour0-cap gasCC average summer Hour23),
+	(cap gasCC average fall Hour0-cap gasCC average fall Hour23),
+	(cap gasCC peak summer Hour0-cap gasCC peak summer Hour23),
+	(cap gasCC peak winter Hour0-cap gasCC peak winter Hour23)
+	~	
+	~		|
+
+cap wind subrange:
+	(cap wind average winter Hour0-cap wind average winter Hour23),
+	(cap wind average spring Hour0-cap wind average spring Hour23),
+	(cap wind average summer Hour0-cap wind average summer Hour23),
+	(cap wind average fall Hour0-cap wind average fall Hour23),
+	(cap wind peak summer Hour0-cap wind peak summer Hour23),
+	(cap wind peak winter Hour0-cap wind peak winter Hour23)
+	~	
+	~		|
+
+demand subrange:
+	(dem average winter Hour0-dem average winter Hour23),
+	(dem average spring Hour0-dem average spring Hour23),
+	(dem average summer Hour0-dem average summer Hour23),
+	(dem average fall Hour0-dem average fall Hour23),
+	(dem peak summer Hour0-dem peak summer Hour23),
+	(dem peak winter Hour0-dem peak winter Hour23)
+	~	
+	~		|
+
+capacity subrange:
+	(cap gasCC average winter Hour0-cap gasCC average winter Hour23),
+	(cap gasCC average spring Hour0-cap gasCC average spring Hour23),
+	(cap gasCC average summer Hour0-cap gasCC average summer Hour23),
+	(cap gasCC average fall Hour0-cap gasCC average fall Hour23),
+	(cap gasCC peak summer Hour0-cap gasCC peak summer Hour23),
+	(cap gasCC peak winter Hour0-cap gasCC peak winter Hour23),
+	(cap wind average winter Hour0-cap wind average winter Hour23),
+	(cap wind average spring Hour0-cap wind average spring Hour23),
+	(cap wind average summer Hour0-cap wind average summer Hour23),
+	(cap wind average fall Hour0-cap wind average fall Hour23),
+	(cap wind peak summer Hour0-cap wind peak summer Hour23),
+	(cap wind peak winter Hour0-cap wind peak winter Hour23)
+	~	
+	~		|
+
+generation subrange:
+	(gen gasCC average winter Hour0-gen gasCC average winter Hour23),
+	(gen gasCC average spring Hour0-gen gasCC average spring Hour23),
+	(gen gasCC average summer Hour0-gen gasCC average summer Hour23),
+	(gen gasCC average fall Hour0-gen gasCC average fall Hour23),
+	(gen gasCC peak summer Hour0-gen gasCC peak summer Hour23),
+	(gen gasCC peak winter Hour0-gen gasCC peak winter Hour23),
+	(gen wind average winter Hour0-gen wind average winter Hour23),
+	(gen wind average spring Hour0-gen wind average spring Hour23),
+	(gen wind average summer Hour0-gen wind average summer Hour23),
+	(gen wind average fall Hour0-gen wind average fall Hour23),
+	(gen wind peak summer Hour0-gen wind peak summer Hour23),
+	(gen wind peak winter Hour0-gen wind peak winter Hour23)
+	~	
+	~		|
+
+gen wind subrange:
+	(gen wind average winter Hour0-gen wind average winter Hour23),
+	(gen wind average spring Hour0-gen wind average spring Hour23),
+	(gen wind average summer Hour0-gen wind average summer Hour23),
+	(gen wind average fall Hour0-gen wind average fall Hour23),
+	(gen wind peak summer Hour0-gen wind peak summer Hour23),
+	(gen wind peak winter Hour0-gen wind peak winter Hour23)
+	~	
+	~		|
+
+gen gasCC subrange:
+	(gen gasCC average winter Hour0-gen gasCC average winter Hour23),
+	(gen gasCC average spring Hour0-gen gasCC average spring Hour23),
+	(gen gasCC average summer Hour0-gen gasCC average summer Hour23),
+	(gen gasCC average fall Hour0-gen gasCC average fall Hour23),
+	(gen gasCC peak summer Hour0-gen gasCC peak summer Hour23),
+	(gen gasCC peak winter Hour0-gen gasCC peak winter Hour23)
+	~	
+	~		|
+
+hours of day:
+	(Hour0-Hour23)
+	~	
+	~		|
+
+Days per Electricity Timeslice[timeslice]=
+	60,
+	90,
+	62,
+	90,
+	31,
+	32
+	~	
+	~		|
+
+Hours[timeslice,hours of day]=
+	Days per Electricity Timeslice[timeslice]
+	~	
+	~		|
+
+Capacity Additions[gasCC]=
+	x col[build gasCC] ~~|
+Capacity Additions[wind]=
+	x col[build wind]
+	~	
+	~		|
+
+Capacity Factor[gasCC,timeslice,hours of day]=
+	0.9 ~~|
+Capacity Factor[wind,timeslice,hours of day]=
+	0.35
+	~	
+	~		|
+
+Annual Capital Recovery[electricity source]=
+	9e+07, 1.4e+08
+	~	
+	~		|
+
+CES Qualifying Technologies[electricity source]=
+	0,1
+	~	
+	~		|
+
+CES Target=
+	0.8
+	~	
+	~		|
+
+col:
+	build gasCC,
+	build wind,
+	(gen gasCC average winter Hour0-gen gasCC average winter Hour23),
+	(gen gasCC average spring Hour0-gen gasCC average spring Hour23),
+	(gen gasCC average summer Hour0-gen gasCC average summer Hour23),
+	(gen gasCC average fall Hour0-gen gasCC average fall Hour23),
+	(gen gasCC peak summer Hour0-gen gasCC peak summer Hour23),
+	(gen gasCC peak winter Hour0-gen gasCC peak winter Hour23),
+	(gen wind average winter Hour0-gen wind average winter Hour23),
+	(gen wind average spring Hour0-gen wind average spring Hour23),
+	(gen wind average summer Hour0-gen wind average summer Hour23),
+	(gen wind average fall Hour0-gen wind average fall Hour23),
+	(gen wind peak summer Hour0-gen wind peak summer Hour23),
+	(gen wind peak winter Hour0-gen wind peak winter Hour23)
+	~	
+	~		|
+
+Demand[timeslice,hours of day]=
+	250
+	~	
+	~		|
+
+electricity source:
+	gasCC,
+	wind
+	~	
+	~		|
+
+FOM[electricity source]=
+	1.5e+07, 3.5e+07
+	~	
+	~		|
+
+Fuel[electricity source]=
+	30,0
+	~	
+	~		|
+
+sense[demand subrange]=
+	0 ~~|
+sense[capacity subrange]=
+	-1 ~~|
+sense[CES total]=
+	1
+	~	
+	~		|
+
+Installed Capacity[electricity source]=
+	200,100
+	~	
+	~		|
+
+timeslice:
+	average winter,
+	average spring,
+	average summer,
+	average fall,
+	peak summer,
+	peak winter
+	~	
+	~		|
+
+objective coefficients[build gasCC] =
+	Annual Capital Recovery[gasCC]+FOM[gasCC] ~~|
+objective coefficients[build wind] =
+	Annual Capital Recovery[wind]+FOM[wind] ~~|
+objective coefficients[gen gasCC subrange]=
+	(Fuel[gasCC]+VOM[gasCC]) ~~|
+objective coefficients[gen wind subrange]=
+	(Fuel[wind]+VOM[wind])
+	~	
+	~		|
+
+ObjVal=
+	 LP OBJ()           + 0*DoSolve
+	~	
+	~		|
+
+Region:
+	(Region1-Region10)
+	~	
+	~		|
+
+row:
+	(dem average winter Hour0-dem average winter Hour23),
+	(dem average spring Hour0-dem average spring Hour23),
+	(dem average summer Hour0-dem average summer Hour23),
+	(dem average fall Hour0-dem average fall Hour23),
+	(dem peak summer Hour0-dem peak summer Hour23),
+	(dem peak winter Hour0-dem peak winter Hour23),
+	(cap gasCC average winter Hour0-cap gasCC average winter Hour23),
+	(cap gasCC average spring Hour0-cap gasCC average spring Hour23),
+	(cap gasCC average summer Hour0-cap gasCC average summer Hour23),
+	(cap gasCC average fall Hour0-cap gasCC average fall Hour23),
+	(cap gasCC peak summer Hour0-cap gasCC peak summer Hour23),
+	(cap gasCC peak winter Hour0-cap gasCC peak winter Hour23),
+	(cap wind average winter Hour0-cap wind average winter Hour23),
+	(cap wind average spring Hour0-cap wind average spring Hour23),
+	(cap wind average summer Hour0-cap wind average summer Hour23),
+	(cap wind average fall Hour0-cap wind average fall Hour23),
+	(cap wind peak summer Hour0-cap wind peak summer Hour23),
+	(cap wind peak winter Hour0-cap wind peak winter Hour23),
+	CES total
+	~	
+	~		|
+
+VOM[electricity source]=
+	3,0
+	~	
+	~		|
+
+CONSTRAINTS:
+	C1
+	~	
+	~		|
+
+idx[col]=
+	1,
+	2,
+	3,
+	4,
+	5,
+	6,
+	7,
+	8,
+	9,
+	10,
+	11,
+	12,
+	13,
+	14,
+	15,
+	16,
+	17,
+	18,
+	19,
+	20,
+	21,
+	22,
+	23,
+	24,
+	25,
+	26,
+	27,
+	28,
+	29,
+	30,
+	31,
+	32,
+	33,
+	34,
+	35,
+	36,
+	37,
+	38,
+	39,
+	40,
+	41,
+	42,
+	43,
+	44,
+	45,
+	46,
+	47,
+	48,
+	49,
+	50,
+	51,
+	52,
+	53,
+	54,
+	55,
+	56,
+	57,
+	58,
+	59,
+	60,
+	61,
+	62,
+	63,
+	64,
+	65,
+	66,
+	67,
+	68,
+	69,
+	70,
+	71,
+	72,
+	73,
+	74,
+	75,
+	76,
+	77,
+	78,
+	79,
+	80,
+	81,
+	82,
+	83,
+	84,
+	85,
+	86,
+	87,
+	88,
+	89,
+	90,
+	91,
+	92,
+	93,
+	94,
+	95,
+	96,
+	97,
+	98,
+	99,
+	100,
+	101,
+	102,
+	103,
+	104,
+	105,
+	106,
+	107,
+	108,
+	109,
+	110,
+	111,
+	112,
+	113,
+	114,
+	115,
+	116,
+	117,
+	118,
+	119,
+	120,
+	121,
+	122,
+	123,
+	124,
+	125,
+	126,
+	127,
+	128,
+	129,
+	130,
+	131,
+	132,
+	133,
+	134,
+	135,
+	136,
+	137,
+	138,
+	139,
+	140,
+	141,
+	142,
+	143,
+	144,
+	145,
+	146,
+	147,
+	148,
+	149,
+	150,
+	151,
+	152,
+	153,
+	154,
+	155,
+	156,
+	157,
+	158,
+	159,
+	160,
+	161,
+	162,
+	163,
+	164,
+	165,
+	166,
+	167,
+	168,
+	169,
+	170,
+	171,
+	172,
+	173,
+	174,
+	175,
+	176,
+	177,
+	178,
+	179,
+	180,
+	181,
+	182,
+	183,
+	184,
+	185,
+	186,
+	187,
+	188,
+	189,
+	190,
+	191,
+	192,
+	193,
+	194,
+	195,
+	196,
+	197,
+	198,
+	199,
+	200,
+	201,
+	202,
+	203,
+	204,
+	205,
+	206,
+	207,
+	208,
+	209,
+	210,
+	211,
+	212,
+	213,
+	214,
+	215,
+	216,
+	217,
+	218,
+	219,
+	220,
+	221,
+	222,
+	223,
+	224,
+	225,
+	226,
+	227,
+	228,
+	229,
+	230,
+	231,
+	232,
+	233,
+	234,
+	235,
+	236,
+	237,
+	238,
+	239,
+	240,
+	241,
+	242,
+	243,
+	244,
+	245,
+	246,
+	247,
+	248,
+	249,
+	250,
+	251,
+	252,
+	253,
+	254,
+	255,
+	256,
+	257,
+	258,
+	259,
+	260,
+	261,
+	262,
+	263,
+	264,
+	265,
+	266,
+	267,
+	268,
+	269,
+	270,
+	271,
+	272,
+	273,
+	274,
+	275,
+	276,
+	277,
+	278,
+	279,
+	280,
+	281,
+	282,
+	283,
+	284,
+	285,
+	286,
+	287,
+	288,
+	289,
+	290
+	~	
+	~		|
+
+lb[col]=
+	0
+	~	
+	~		|
+
+ub[col]=
+	100000
+	~	
+	~		|
+
+VARIABLES:
+	X1,X2
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 2050
+	~	Year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 2025
+	~	Year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Year [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,90,0
+10,1,lb,843,725,8,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,2,ub,778,688,11,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,3,x col,917,581,31,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,4,idx,996,513,12,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,5,4,3,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,6,Hours,342,447,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,7,Demand,581,306,32,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,8,Installed Capacity,734,408,33,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,9,Capacity Factor,545,459,58,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,10,Annual Capital Recovery,449,810,44,26,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,11,FOM,550,798,20,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,12,VOM,670,799,20,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,13,Fuel,361,723,17,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,14,b,583,395,7,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,15,sense,776,477,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,16,6,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,17,A flat,503,528,20,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,18,9,17,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,19,6,17,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,20,objective coefficients,582,649,42,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,21,13,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,22,10,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,23,11,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,24,12,20,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,25,ObjVal,890,483,26,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,26,status,904,654,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,27,Capacity Additions,1062,585,35,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,28,3,27,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,29,CES Qualifying Technologies,408,575,56,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,30,CES Target,722,320,44,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,31,29,17,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,32,Days per Electricity Timeslice,337,355,71,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,33,32,6,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,34,7,14,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,35,8,14,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,36,9,14,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,37,30,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,38,A flat table,570,590,39,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,39,38,17,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,40,Total Capacity,1198,579,52,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,41,Installed Capacity,1229,477,38,18,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,42,27,40,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,43,41,40,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,44,Capacity Factor,1655,437,38,18,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,45,Days per Electricity Timeslice,1435,428,41,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,46,DoSolve,787,582,32,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,47,17,46,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,48,14,46,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,49,1,46,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,50,20,46,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,51,15,46,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,52,2,46,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,53,46,25,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,54,46,3,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,55,46,26,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,56,total generation,1189,651,56,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,57,3,56,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,58,achieved capacity factor,1360,607,54,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,59,fraction of capacity factor achieved,1553,614,69,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,60,56,58,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,61,40,58,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,62,58,59,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,63,annual capacity factor,1563,531,57,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,64,44,63,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,65,45,63,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,66,63,59,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+///---\\\
+:L<%^E!@
+1:current.vdfx
+4:Time
+5:A flat[row,col]
+6:average fall
+6:average spring
+6:average summer
+6:average winter
+6:build gasCC
+6:build wind
+6:C1
+6:cap gasCC average fall Hour0
+6:cap gasCC average fall Hour1
+6:cap gasCC average fall Hour10
+6:cap gasCC average fall Hour11
+6:cap gasCC average fall Hour12
+6:cap gasCC average fall Hour13
+6:cap gasCC average fall Hour14
+6:cap gasCC average fall Hour15
+6:cap gasCC average fall Hour16
+6:cap gasCC average fall Hour17
+6:cap gasCC average fall Hour18
+6:cap gasCC average fall Hour19
+6:cap gasCC average fall Hour2
+6:cap gasCC average fall Hour20
+6:cap gasCC average fall Hour21
+6:cap gasCC average fall Hour22
+6:cap gasCC average fall Hour23
+6:cap gasCC average fall Hour3
+6:cap gasCC average fall Hour4
+6:cap gasCC average fall Hour5
+6:cap gasCC average fall Hour6
+6:cap gasCC average fall Hour7
+6:cap gasCC average fall Hour8
+6:cap gasCC average fall Hour9
+6:cap gasCC average spring Hour0
+6:cap gasCC average spring Hour1
+6:cap gasCC average spring Hour10
+6:cap gasCC average spring Hour11
+6:cap gasCC average spring Hour12
+6:cap gasCC average spring Hour13
+6:cap gasCC average spring Hour14
+6:cap gasCC average spring Hour15
+6:cap gasCC average spring Hour16
+6:cap gasCC average spring Hour17
+6:cap gasCC average spring Hour18
+6:cap gasCC average spring Hour19
+6:cap gasCC average spring Hour2
+6:cap gasCC average spring Hour20
+6:cap gasCC average spring Hour21
+6:cap gasCC average spring Hour22
+6:cap gasCC average spring Hour23
+6:cap gasCC average spring Hour3
+6:cap gasCC average spring Hour4
+6:cap gasCC average spring Hour5
+6:cap gasCC average spring Hour6
+6:cap gasCC average spring Hour7
+6:cap gasCC average spring Hour8
+6:cap gasCC average spring Hour9
+6:cap gasCC average summer Hour0
+6:cap gasCC average summer Hour1
+6:cap gasCC average summer Hour10
+6:cap gasCC average summer Hour11
+6:cap gasCC average summer Hour12
+6:cap gasCC average summer Hour13
+6:cap gasCC average summer Hour14
+6:cap gasCC average summer Hour15
+6:cap gasCC average summer Hour16
+6:cap gasCC average summer Hour17
+6:cap gasCC average summer Hour18
+6:cap gasCC average summer Hour19
+6:cap gasCC average summer Hour2
+6:cap gasCC average summer Hour20
+6:cap gasCC average summer Hour21
+6:cap gasCC average summer Hour22
+6:cap gasCC average summer Hour23
+6:cap gasCC average summer Hour3
+6:cap gasCC average summer Hour4
+6:cap gasCC average summer Hour5
+6:cap gasCC average summer Hour6
+6:cap gasCC average summer Hour7
+6:cap gasCC average summer Hour8
+6:cap gasCC average summer Hour9
+6:cap gasCC average winter Hour0
+6:cap gasCC average winter Hour1
+6:cap gasCC average winter Hour10
+6:cap gasCC average winter Hour11
+6:cap gasCC average winter Hour12
+6:cap gasCC average winter Hour13
+6:cap gasCC average winter Hour14
+6:cap gasCC average winter Hour15
+6:cap gasCC average winter Hour16
+6:cap gasCC average winter Hour17
+6:cap gasCC average winter Hour18
+6:cap gasCC average winter Hour19
+6:cap gasCC average winter Hour2
+6:cap gasCC average winter Hour20
+6:cap gasCC average winter Hour21
+6:cap gasCC average winter Hour22
+6:cap gasCC average winter Hour23
+6:cap gasCC average winter Hour3
+6:cap gasCC average winter Hour4
+6:cap gasCC average winter Hour5
+6:cap gasCC average winter Hour6
+6:cap gasCC average winter Hour7
+6:cap gasCC average winter Hour8
+6:cap gasCC average winter Hour9
+6:cap gasCC peak summer Hour0
+6:cap gasCC peak summer Hour1
+6:cap gasCC peak summer Hour10
+6:cap gasCC peak summer Hour11
+6:cap gasCC peak summer Hour12
+6:cap gasCC peak summer Hour13
+6:cap gasCC peak summer Hour14
+6:cap gasCC peak summer Hour15
+6:cap gasCC peak summer Hour16
+6:cap gasCC peak summer Hour17
+6:cap gasCC peak summer Hour18
+6:cap gasCC peak summer Hour19
+6:cap gasCC peak summer Hour2
+6:cap gasCC peak summer Hour20
+6:cap gasCC peak summer Hour21
+6:cap gasCC peak summer Hour22
+6:cap gasCC peak summer Hour23
+6:cap gasCC peak summer Hour3
+6:cap gasCC peak summer Hour4
+6:cap gasCC peak summer Hour5
+6:cap gasCC peak summer Hour6
+6:cap gasCC peak summer Hour7
+6:cap gasCC peak summer Hour8
+6:cap gasCC peak summer Hour9
+6:cap gasCC peak winter Hour0
+6:cap gasCC peak winter Hour1
+6:cap gasCC peak winter Hour10
+6:cap gasCC peak winter Hour11
+6:cap gasCC peak winter Hour12
+6:cap gasCC peak winter Hour13
+6:cap gasCC peak winter Hour14
+6:cap gasCC peak winter Hour15
+6:cap gasCC peak winter Hour16
+6:cap gasCC peak winter Hour17
+6:cap gasCC peak winter Hour18
+6:cap gasCC peak winter Hour19
+6:cap gasCC peak winter Hour2
+6:cap gasCC peak winter Hour20
+6:cap gasCC peak winter Hour21
+6:cap gasCC peak winter Hour22
+6:cap gasCC peak winter Hour23
+6:cap gasCC peak winter Hour3
+6:cap gasCC peak winter Hour4
+6:cap gasCC peak winter Hour5
+6:cap gasCC peak winter Hour6
+6:cap gasCC peak winter Hour7
+6:cap gasCC peak winter Hour8
+6:cap gasCC peak winter Hour9
+6:cap wind average fall Hour0
+6:cap wind average fall Hour1
+6:cap wind average fall Hour10
+6:cap wind average fall Hour11
+6:cap wind average fall Hour12
+6:cap wind average fall Hour13
+6:cap wind average fall Hour14
+6:cap wind average fall Hour15
+6:cap wind average fall Hour16
+6:cap wind average fall Hour17
+6:cap wind average fall Hour18
+6:cap wind average fall Hour19
+6:cap wind average fall Hour2
+6:cap wind average fall Hour20
+6:cap wind average fall Hour21
+6:cap wind average fall Hour22
+6:cap wind average fall Hour23
+6:cap wind average fall Hour3
+6:cap wind average fall Hour4
+6:cap wind average fall Hour5
+6:cap wind average fall Hour6
+6:cap wind average fall Hour7
+6:cap wind average fall Hour8
+6:cap wind average fall Hour9
+6:cap wind average spring Hour0
+6:cap wind average spring Hour1
+6:cap wind average spring Hour10
+6:cap wind average spring Hour11
+6:cap wind average spring Hour12
+6:cap wind average spring Hour13
+6:cap wind average spring Hour14
+6:cap wind average spring Hour15
+6:cap wind average spring Hour16
+6:cap wind average spring Hour17
+6:cap wind average spring Hour18
+6:cap wind average spring Hour19
+6:cap wind average spring Hour2
+6:cap wind average spring Hour20
+6:cap wind average spring Hour21
+6:cap wind average spring Hour22
+6:cap wind average spring Hour23
+6:cap wind average spring Hour3
+6:cap wind average spring Hour4
+6:cap wind average spring Hour5
+6:cap wind average spring Hour6
+6:cap wind average spring Hour7
+6:cap wind average spring Hour8
+6:cap wind average spring Hour9
+6:cap wind average summer Hour0
+6:cap wind average summer Hour1
+6:cap wind average summer Hour10
+6:cap wind average summer Hour11
+6:cap wind average summer Hour12
+6:cap wind average summer Hour13
+6:cap wind average summer Hour14
+6:cap wind average summer Hour15
+6:cap wind average summer Hour16
+6:cap wind average summer Hour17
+6:cap wind average summer Hour18
+6:cap wind average summer Hour19
+6:cap wind average summer Hour2
+6:cap wind average summer Hour20
+6:cap wind average summer Hour21
+6:cap wind average summer Hour22
+6:cap wind average summer Hour23
+6:cap wind average summer Hour3
+6:cap wind average summer Hour4
+6:cap wind average summer Hour5
+6:cap wind average summer Hour6
+6:cap wind average summer Hour7
+6:cap wind average summer Hour8
+6:cap wind average summer Hour9
+6:cap wind average winter Hour0
+6:cap wind average winter Hour1
+6:cap wind average winter Hour10
+6:cap wind average winter Hour11
+6:cap wind average winter Hour12
+6:cap wind average winter Hour13
+6:cap wind average winter Hour14
+6:cap wind average winter Hour15
+6:cap wind average winter Hour16
+6:cap wind average winter Hour17
+6:cap wind average winter Hour18
+6:cap wind average winter Hour19
+6:cap wind average winter Hour2
+6:cap wind average winter Hour20
+6:cap wind average winter Hour21
+6:cap wind average winter Hour22
+6:cap wind average winter Hour23
+6:cap wind average winter Hour3
+6:cap wind average winter Hour4
+6:cap wind average winter Hour5
+6:cap wind average winter Hour6
+6:cap wind average winter Hour7
+6:cap wind average winter Hour8
+6:cap wind average winter Hour9
+6:cap wind peak summer Hour0
+6:cap wind peak summer Hour1
+6:cap wind peak summer Hour10
+6:cap wind peak summer Hour11
+6:cap wind peak summer Hour12
+6:cap wind peak summer Hour13
+6:cap wind peak summer Hour14
+6:cap wind peak summer Hour15
+6:cap wind peak summer Hour16
+6:cap wind peak summer Hour17
+6:cap wind peak summer Hour18
+6:cap wind peak summer Hour19
+6:cap wind peak summer Hour2
+6:cap wind peak summer Hour20
+6:cap wind peak summer Hour21
+6:cap wind peak summer Hour22
+6:cap wind peak summer Hour23
+6:cap wind peak summer Hour3
+6:cap wind peak summer Hour4
+6:cap wind peak summer Hour5
+6:cap wind peak summer Hour6
+6:cap wind peak summer Hour7
+6:cap wind peak summer Hour8
+6:cap wind peak summer Hour9
+6:cap wind peak winter Hour0
+6:cap wind peak winter Hour1
+6:cap wind peak winter Hour10
+6:cap wind peak winter Hour11
+6:cap wind peak winter Hour12
+6:cap wind peak winter Hour13
+6:cap wind peak winter Hour14
+6:cap wind peak winter Hour15
+6:cap wind peak winter Hour16
+6:cap wind peak winter Hour17
+6:cap wind peak winter Hour18
+6:cap wind peak winter Hour19
+6:cap wind peak winter Hour2
+6:cap wind peak winter Hour20
+6:cap wind peak winter Hour21
+6:cap wind peak winter Hour22
+6:cap wind peak winter Hour23
+6:cap wind peak winter Hour3
+6:cap wind peak winter Hour4
+6:cap wind peak winter Hour5
+6:cap wind peak winter Hour6
+6:cap wind peak winter Hour7
+6:cap wind peak winter Hour8
+6:cap wind peak winter Hour9
+6:CES total
+6:dem average fall Hour0
+6:dem average fall Hour1
+6:dem average fall Hour10
+6:dem average fall Hour11
+6:dem average fall Hour12
+6:dem average fall Hour13
+6:dem average fall Hour14
+6:dem average fall Hour15
+6:dem average fall Hour16
+6:dem average fall Hour17
+6:dem average fall Hour18
+6:dem average fall Hour19
+6:dem average fall Hour2
+6:dem average fall Hour20
+6:dem average fall Hour21
+6:dem average fall Hour22
+6:dem average fall Hour23
+6:dem average fall Hour3
+6:dem average fall Hour4
+6:dem average fall Hour5
+6:dem average fall Hour6
+6:dem average fall Hour7
+6:dem average fall Hour8
+6:dem average fall Hour9
+6:dem average spring Hour0
+6:dem average spring Hour1
+6:dem average spring Hour10
+6:dem average spring Hour11
+6:dem average spring Hour12
+6:dem average spring Hour13
+6:dem average spring Hour14
+6:dem average spring Hour15
+6:dem average spring Hour16
+6:dem average spring Hour17
+6:dem average spring Hour18
+6:dem average spring Hour19
+6:dem average spring Hour2
+6:dem average spring Hour20
+6:dem average spring Hour21
+6:dem average spring Hour22
+6:dem average spring Hour23
+6:dem average spring Hour3
+6:dem average spring Hour4
+6:dem average spring Hour5
+6:dem average spring Hour6
+6:dem average spring Hour7
+6:dem average spring Hour8
+6:dem average spring Hour9
+6:dem average summer Hour0
+6:dem average summer Hour1
+6:dem average summer Hour10
+6:dem average summer Hour11
+6:dem average summer Hour12
+6:dem average summer Hour13
+6:dem average summer Hour14
+6:dem average summer Hour15
+6:dem average summer Hour16
+6:dem average summer Hour17
+6:dem average summer Hour18
+6:dem average summer Hour19
+6:dem average summer Hour2
+6:dem average summer Hour20
+6:dem average summer Hour21
+6:dem average summer Hour22
+6:dem average summer Hour23
+6:dem average summer Hour3
+6:dem average summer Hour4
+6:dem average summer Hour5
+6:dem average summer Hour6
+6:dem average summer Hour7
+6:dem average summer Hour8
+6:dem average summer Hour9
+6:dem average winter Hour0
+6:dem average winter Hour1
+6:dem average winter Hour10
+6:dem average winter Hour11
+6:dem average winter Hour12
+6:dem average winter Hour13
+6:dem average winter Hour14
+6:dem average winter Hour15
+6:dem average winter Hour16
+6:dem average winter Hour17
+6:dem average winter Hour18
+6:dem average winter Hour19
+6:dem average winter Hour2
+6:dem average winter Hour20
+6:dem average winter Hour21
+6:dem average winter Hour22
+6:dem average winter Hour23
+6:dem average winter Hour3
+6:dem average winter Hour4
+6:dem average winter Hour5
+6:dem average winter Hour6
+6:dem average winter Hour7
+6:dem average winter Hour8
+6:dem average winter Hour9
+6:dem peak summer Hour0
+6:dem peak summer Hour1
+6:dem peak summer Hour10
+6:dem peak summer Hour11
+6:dem peak summer Hour12
+6:dem peak summer Hour13
+6:dem peak summer Hour14
+6:dem peak summer Hour15
+6:dem peak summer Hour16
+6:dem peak summer Hour17
+6:dem peak summer Hour18
+6:dem peak summer Hour19
+6:dem peak summer Hour2
+6:dem peak summer Hour20
+6:dem peak summer Hour21
+6:dem peak summer Hour22
+6:dem peak summer Hour23
+6:dem peak summer Hour3
+6:dem peak summer Hour4
+6:dem peak summer Hour5
+6:dem peak summer Hour6
+6:dem peak summer Hour7
+6:dem peak summer Hour8
+6:dem peak summer Hour9
+6:dem peak winter Hour0
+6:dem peak winter Hour1
+6:dem peak winter Hour10
+6:dem peak winter Hour11
+6:dem peak winter Hour12
+6:dem peak winter Hour13
+6:dem peak winter Hour14
+6:dem peak winter Hour15
+6:dem peak winter Hour16
+6:dem peak winter Hour17
+6:dem peak winter Hour18
+6:dem peak winter Hour19
+6:dem peak winter Hour2
+6:dem peak winter Hour20
+6:dem peak winter Hour21
+6:dem peak winter Hour22
+6:dem peak winter Hour23
+6:dem peak winter Hour3
+6:dem peak winter Hour4
+6:dem peak winter Hour5
+6:dem peak winter Hour6
+6:dem peak winter Hour7
+6:dem peak winter Hour8
+6:dem peak winter Hour9
+6:gasCC
+6:gen gasCC average fall Hour0
+6:gen gasCC average fall Hour1
+6:gen gasCC average fall Hour10
+6:gen gasCC average fall Hour11
+6:gen gasCC average fall Hour12
+6:gen gasCC average fall Hour13
+6:gen gasCC average fall Hour14
+6:gen gasCC average fall Hour15
+6:gen gasCC average fall Hour16
+6:gen gasCC average fall Hour17
+6:gen gasCC average fall Hour18
+6:gen gasCC average fall Hour19
+6:gen gasCC average fall Hour2
+6:gen gasCC average fall Hour20
+6:gen gasCC average fall Hour21
+6:gen gasCC average fall Hour22
+6:gen gasCC average fall Hour23
+6:gen gasCC average fall Hour3
+6:gen gasCC average fall Hour4
+6:gen gasCC average fall Hour5
+6:gen gasCC average fall Hour6
+6:gen gasCC average fall Hour7
+6:gen gasCC average fall Hour8
+6:gen gasCC average fall Hour9
+6:gen gasCC average spring Hour0
+6:gen gasCC average spring Hour1
+6:gen gasCC average spring Hour10
+6:gen gasCC average spring Hour11
+6:gen gasCC average spring Hour12
+6:gen gasCC average spring Hour13
+6:gen gasCC average spring Hour14
+6:gen gasCC average spring Hour15
+6:gen gasCC average spring Hour16
+6:gen gasCC average spring Hour17
+6:gen gasCC average spring Hour18
+6:gen gasCC average spring Hour19
+6:gen gasCC average spring Hour2
+6:gen gasCC average spring Hour20
+6:gen gasCC average spring Hour21
+6:gen gasCC average spring Hour22
+6:gen gasCC average spring Hour23
+6:gen gasCC average spring Hour3
+6:gen gasCC average spring Hour4
+6:gen gasCC average spring Hour5
+6:gen gasCC average spring Hour6
+6:gen gasCC average spring Hour7
+6:gen gasCC average spring Hour8
+6:gen gasCC average spring Hour9
+6:gen gasCC average summer Hour0
+6:gen gasCC average summer Hour1
+6:gen gasCC average summer Hour10
+6:gen gasCC average summer Hour11
+6:gen gasCC average summer Hour12
+6:gen gasCC average summer Hour13
+6:gen gasCC average summer Hour14
+6:gen gasCC average summer Hour15
+6:gen gasCC average summer Hour16
+6:gen gasCC average summer Hour17
+6:gen gasCC average summer Hour18
+6:gen gasCC average summer Hour19
+6:gen gasCC average summer Hour2
+6:gen gasCC average summer Hour20
+6:gen gasCC average summer Hour21
+6:gen gasCC average summer Hour22
+6:gen gasCC average summer Hour23
+6:gen gasCC average summer Hour3
+6:gen gasCC average summer Hour4
+6:gen gasCC average summer Hour5
+6:gen gasCC average summer Hour6
+6:gen gasCC average summer Hour7
+6:gen gasCC average summer Hour8
+6:gen gasCC average summer Hour9
+6:gen gasCC average winter Hour0
+6:gen gasCC average winter Hour1
+6:gen gasCC average winter Hour10
+6:gen gasCC average winter Hour11
+6:gen gasCC average winter Hour12
+6:gen gasCC average winter Hour13
+6:gen gasCC average winter Hour14
+6:gen gasCC average winter Hour15
+6:gen gasCC average winter Hour16
+6:gen gasCC average winter Hour17
+6:gen gasCC average winter Hour18
+6:gen gasCC average winter Hour19
+6:gen gasCC average winter Hour2
+6:gen gasCC average winter Hour20
+6:gen gasCC average winter Hour21
+6:gen gasCC average winter Hour22
+6:gen gasCC average winter Hour23
+6:gen gasCC average winter Hour3
+6:gen gasCC average winter Hour4
+6:gen gasCC average winter Hour5
+6:gen gasCC average winter Hour6
+6:gen gasCC average winter Hour7
+6:gen gasCC average winter Hour8
+6:gen gasCC average winter Hour9
+6:gen gasCC peak summer Hour0
+6:gen gasCC peak summer Hour1
+6:gen gasCC peak summer Hour10
+6:gen gasCC peak summer Hour11
+6:gen gasCC peak summer Hour12
+6:gen gasCC peak summer Hour13
+6:gen gasCC peak summer Hour14
+6:gen gasCC peak summer Hour15
+6:gen gasCC peak summer Hour16
+6:gen gasCC peak summer Hour17
+6:gen gasCC peak summer Hour18
+6:gen gasCC peak summer Hour19
+6:gen gasCC peak summer Hour2
+6:gen gasCC peak summer Hour20
+6:gen gasCC peak summer Hour21
+6:gen gasCC peak summer Hour22
+6:gen gasCC peak summer Hour23
+6:gen gasCC peak summer Hour3
+6:gen gasCC peak summer Hour4
+6:gen gasCC peak summer Hour5
+6:gen gasCC peak summer Hour6
+6:gen gasCC peak summer Hour7
+6:gen gasCC peak summer Hour8
+6:gen gasCC peak summer Hour9
+6:gen gasCC peak winter Hour0
+6:gen gasCC peak winter Hour1
+6:gen gasCC peak winter Hour10
+6:gen gasCC peak winter Hour11
+6:gen gasCC peak winter Hour12
+6:gen gasCC peak winter Hour13
+6:gen gasCC peak winter Hour14
+6:gen gasCC peak winter Hour15
+6:gen gasCC peak winter Hour16
+6:gen gasCC peak winter Hour17
+6:gen gasCC peak winter Hour18
+6:gen gasCC peak winter Hour19
+6:gen gasCC peak winter Hour2
+6:gen gasCC peak winter Hour20
+6:gen gasCC peak winter Hour21
+6:gen gasCC peak winter Hour22
+6:gen gasCC peak winter Hour23
+6:gen gasCC peak winter Hour3
+6:gen gasCC peak winter Hour4
+6:gen gasCC peak winter Hour5
+6:gen gasCC peak winter Hour6
+6:gen gasCC peak winter Hour7
+6:gen gasCC peak winter Hour8
+6:gen gasCC peak winter Hour9
+6:gen wind average fall Hour0
+6:gen wind average fall Hour1
+6:gen wind average fall Hour10
+6:gen wind average fall Hour11
+6:gen wind average fall Hour12
+6:gen wind average fall Hour13
+6:gen wind average fall Hour14
+6:gen wind average fall Hour15
+6:gen wind average fall Hour16
+6:gen wind average fall Hour17
+6:gen wind average fall Hour18
+6:gen wind average fall Hour19
+6:gen wind average fall Hour2
+6:gen wind average fall Hour20
+6:gen wind average fall Hour21
+6:gen wind average fall Hour22
+6:gen wind average fall Hour23
+6:gen wind average fall Hour3
+6:gen wind average fall Hour4
+6:gen wind average fall Hour5
+6:gen wind average fall Hour6
+6:gen wind average fall Hour7
+6:gen wind average fall Hour8
+6:gen wind average fall Hour9
+6:gen wind average spring Hour0
+6:gen wind average spring Hour1
+6:gen wind average spring Hour10
+6:gen wind average spring Hour11
+6:gen wind average spring Hour12
+6:gen wind average spring Hour13
+6:gen wind average spring Hour14
+6:gen wind average spring Hour15
+6:gen wind average spring Hour16
+6:gen wind average spring Hour17
+6:gen wind average spring Hour18
+6:gen wind average spring Hour19
+6:gen wind average spring Hour2
+6:gen wind average spring Hour20
+6:gen wind average spring Hour21
+6:gen wind average spring Hour22
+6:gen wind average spring Hour23
+6:gen wind average spring Hour3
+6:gen wind average spring Hour4
+6:gen wind average spring Hour5
+6:gen wind average spring Hour6
+6:gen wind average spring Hour7
+6:gen wind average spring Hour8
+6:gen wind average spring Hour9
+6:gen wind average summer Hour0
+6:gen wind average summer Hour1
+6:gen wind average summer Hour10
+6:gen wind average summer Hour11
+6:gen wind average summer Hour12
+6:gen wind average summer Hour13
+6:gen wind average summer Hour14
+6:gen wind average summer Hour15
+6:gen wind average summer Hour16
+6:gen wind average summer Hour17
+6:gen wind average summer Hour18
+6:gen wind average summer Hour19
+6:gen wind average summer Hour2
+6:gen wind average summer Hour20
+6:gen wind average summer Hour21
+6:gen wind average summer Hour22
+6:gen wind average summer Hour23
+6:gen wind average summer Hour3
+6:gen wind average summer Hour4
+6:gen wind average summer Hour5
+6:gen wind average summer Hour6
+6:gen wind average summer Hour7
+6:gen wind average summer Hour8
+6:gen wind average summer Hour9
+6:gen wind average winter Hour0
+6:gen wind average winter Hour1
+6:gen wind average winter Hour10
+6:gen wind average winter Hour11
+6:gen wind average winter Hour12
+6:gen wind average winter Hour13
+6:gen wind average winter Hour14
+6:gen wind average winter Hour15
+6:gen wind average winter Hour16
+6:gen wind average winter Hour17
+6:gen wind average winter Hour18
+6:gen wind average winter Hour19
+6:gen wind average winter Hour2
+6:gen wind average winter Hour20
+6:gen wind average winter Hour21
+6:gen wind average winter Hour22
+6:gen wind average winter Hour23
+6:gen wind average winter Hour3
+6:gen wind average winter Hour4
+6:gen wind average winter Hour5
+6:gen wind average winter Hour6
+6:gen wind average winter Hour7
+6:gen wind average winter Hour8
+6:gen wind average winter Hour9
+6:gen wind peak summer Hour0
+6:gen wind peak summer Hour1
+6:gen wind peak summer Hour10
+6:gen wind peak summer Hour11
+6:gen wind peak summer Hour12
+6:gen wind peak summer Hour13
+6:gen wind peak summer Hour14
+6:gen wind peak summer Hour15
+6:gen wind peak summer Hour16
+6:gen wind peak summer Hour17
+6:gen wind peak summer Hour18
+6:gen wind peak summer Hour19
+6:gen wind peak summer Hour2
+6:gen wind peak summer Hour20
+6:gen wind peak summer Hour21
+6:gen wind peak summer Hour22
+6:gen wind peak summer Hour23
+6:gen wind peak summer Hour3
+6:gen wind peak summer Hour4
+6:gen wind peak summer Hour5
+6:gen wind peak summer Hour6
+6:gen wind peak summer Hour7
+6:gen wind peak summer Hour8
+6:gen wind peak summer Hour9
+6:gen wind peak winter Hour0
+6:gen wind peak winter Hour1
+6:gen wind peak winter Hour10
+6:gen wind peak winter Hour11
+6:gen wind peak winter Hour12
+6:gen wind peak winter Hour13
+6:gen wind peak winter Hour14
+6:gen wind peak winter Hour15
+6:gen wind peak winter Hour16
+6:gen wind peak winter Hour17
+6:gen wind peak winter Hour18
+6:gen wind peak winter Hour19
+6:gen wind peak winter Hour2
+6:gen wind peak winter Hour20
+6:gen wind peak winter Hour21
+6:gen wind peak winter Hour22
+6:gen wind peak winter Hour23
+6:gen wind peak winter Hour3
+6:gen wind peak winter Hour4
+6:gen wind peak winter Hour5
+6:gen wind peak winter Hour6
+6:gen wind peak winter Hour7
+6:gen wind peak winter Hour8
+6:gen wind peak winter Hour9
+6:Hour0
+6:Hour1
+6:Hour10
+6:Hour11
+6:Hour12
+6:Hour13
+6:Hour14
+6:Hour15
+6:Hour16
+6:Hour17
+6:Hour18
+6:Hour19
+6:Hour2
+6:Hour20
+6:Hour21
+6:Hour22
+6:Hour23
+6:Hour3
+6:Hour4
+6:Hour5
+6:Hour6
+6:Hour7
+6:Hour8
+6:Hour9
+6:peak summer
+6:peak winter
+6:Region1
+6:Region10
+6:Region2
+6:Region3
+6:Region4
+6:Region5
+6:Region6
+6:Region7
+6:Region8
+6:Region9
+6:wind
+6:X1
+6:X2
+9:current
+19:90,0
+24:2025
+25:2050
+26:2050
+15:0,0,0,0,0,0
+27:0,
+34:0,
+42:1
+72:0
+73:0
+35:Date
+36:YYYY-MM-DD
+37:2024
+38:1
+39:1
+40:0
+41:0
+95:0
+96:0
+97:0
+77:0
+78:0
+102:1
+93:0
+94:0
+92:0
+91:0
+90:0
+87:0
+75:
+43:
+103:8,8,8,3,8
+105:0,0,0,0,0,0,0,0,0,0
+104:Courier|12||0-0-0|0-0-0|-1--1--1|0-0-255|192-192-192|-1--1--1
