@@ -2611,7 +2611,7 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,90,0
 :L<%^E!@
 1:current.vdfx
 4:Time
-5:DoSolve
+5:A flat[row,col]
 6:average fall
 6:average spring
 6:average summer
