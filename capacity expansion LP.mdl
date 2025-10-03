@@ -1,22 +1,66 @@
 {UTF-8}
+DoSolve=
+	LP SOLVE RTH XCAP CES RES(
+	  Demand Across Timeslice[Region1, average winter,Hour0],
+	  Capacity Factor[Region1,gasCC,average winter,Hour0],
+	  Hours[average winter, Hour0],
+	  Annual Capital Recovery[gasCC],
+	  FOM[gasCC],
+	  Fuel[gasCC],
+	  VOM[gasCC],
+	  Last Year Installed Capacity[Region1,gasCC],
+	  CES Qualifying Technologies[gasCC],
+	  CES RHS,
+	  Reserve Margin,
+	  ELMCOUNT(Region),
+	  ELMCOUNT(timeslice),
+	  ELMCOUNT(hours of day),
+	  ELMCOUNT(electricity source)
+	)
+	~	
+	~		|
+
+Last Year Installed Capacity[Region, electricity source]= INTEG (
+	New Capacity[Region,electricity source],
+		Start Year Capacity[Region,electricity source])
+	~	
+	~		|
+
+Electricity source number[electricity source]=
+	1,2
+	~	
+	~		|
+
+CES RHS=
+	SUM(CES Target*Demand Across Timeslice[Region!,timeslice!,hours of day!])
+	~	
+	~		|
+
+Capacity Cost by Region[Region]=
+	LP COST CAP( Region Numbers[Region] ) + 0*ObjVal
+	~	
+	~		|
+
+Start Year Capacity[Region, gasCC]=
+	200 ~~|
+Start Year Capacity[Region, wind]=
+	100
+	~	
+	~		|
+
+New Capacity[Region,electricity source]=
+	LP CAP ADD( Region Numbers[Region] ,Electricity source number[electricity source])+0\
+		*ObjVal
+	~	
+	~		|
+
+Reserve Margin=
+	0.15
+	~	
+	~		|
+
 Region Numbers[Region]=
 	1,2,3,4,5,6,7,8,9,10
-	~	
-	~		|
-
-Build Gas Additions[Region]=
-	LP CAP GAS( Region Numbers[Region] ) + 0 * ObjVal
-	~	
-	~		|
-
-Gen Gas[Region, timeslice, hours of day]=
-	LP GEN GAS( Region Numbers[Region], Timeslice Numbers[timeslice], Hour Numbers[hours of day\
-		] ) + 0 * ObjVal
-	~	
-	~		|
-
-Build Wind Additions[Region]=
-	LP CAP WIND( Region Numbers[Region] ) + 0 * ObjVal
 	~	
 	~		|
 
@@ -25,39 +69,9 @@ Timeslice Numbers[timeslice]=
 	~	
 	~		|
 
-Gen Wind[Region,timeslice,hours of day]=
-	LP GEN WIND( Region Numbers[Region], Timeslice Numbers[timeslice], Hour Numbers[hours of day\
-		] ) + 0 * ObjVal
-	~	
-	~		|
-
 Hour Numbers[hours of day]=
 	1,2,3,4,5,6,7,8,9,10,11,12,
 	                           13,14,15,16,17,18,19,20,21,22,23,24
-	~	
-	~		|
-
-DoSolve=
-	LP SOLVE IMPLICIT RCF QBV XCAP(
-	  Demand Across Timeslice[Region1, average winter,Hour0],
-	  Capacity Factor[gasCC,Region1,average winter,Hour0],
-	  Hours[average winter, Hour0],
-	  Annual Capital Recovery[gasCC],
-	  FOM[gasCC],
-	  Fuel[gasCC],
-	  VOM[gasCC],
-	  Installed Capacity[gasCC,Region1],
-	  CES Qualifying Technologies[gasCC],
-	  CES RHS,
-	  ELMCOUNT(Region),
-	  ELMCOUNT(timeslice),
-	  ELMCOUNT(hours of day)
-	)
-	~	
-	~		|
-
-CES RHS=
-	SUM(CES Target*Demand Across Timeslice[Region!,timeslice!,hours of day!])
 	~	
 	~		|
 
@@ -179,9 +193,9 @@ Hours[timeslice,hours of day]=
 	~	
 	~		|
 
-Capacity Factor[gasCC,Region,timeslice,hours of day]=
+Capacity Factor[Region,gasCC,timeslice,hours of day]=
 	0.9 ~~|
-Capacity Factor[wind,Region,timeslice,hours of day]=
+Capacity Factor[Region,wind,timeslice,hours of day]=
 	0.35
 	~	
 	~		|
@@ -197,7 +211,7 @@ CES Qualifying Technologies[electricity source]=
 	~		|
 
 CES Target=
-	0.8
+	0
 	~	
 	~		|
 
@@ -237,13 +251,6 @@ FOM[electricity source]=
 
 Fuel[electricity source]=
 	30,0
-	~	
-	~		|
-
-Installed Capacity[gasCC,Region]=
-	200 ~~|
-Installed Capacity[wind, Region]=
-	100
 	~	
 	~		|
 
@@ -336,24 +343,23 @@ TIME STEP  = 1
 V300  Do not put anything below this section - it will be ignored
 *View 1
 $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,90,0
-10,1,Hours,398,503,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,2,Load MW,555,225,36,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,3,Installed Capacity,852,461,33,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,4,Capacity Factor,601,515,58,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,5,Annual Capital Recovery,505,866,44,26,8,131,0,0,0,0,0,0,0,0,0,0,0,0
-10,6,FOM,606,854,20,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,7,VOM,726,855,20,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,8,Fuel,417,779,17,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,9,ObjVal,946,539,26,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,10,status,960,710,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,11,CES Qualifying Technologies,464,631,56,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,12,CES Target,1087,270,44,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,13,Days per Electricity Timeslice,393,411,71,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1,Hours,306,271,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,2,Load MW,463,-7,36,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,4,Capacity Factor,509,283,58,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,5,Annual Capital Recovery,413,634,44,26,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,6,FOM,514,622,20,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,7,VOM,634,623,20,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,8,Fuel,325,547,17,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,9,ObjVal,895,510,26,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,10,status,915,312,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,11,CES Qualifying Technologies,372,399,56,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,12,CES Target,995,38,44,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,13,Days per Electricity Timeslice,301,179,71,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,14,13,1,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,15,DoSolve,843,638,32,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,15,DoSolve,751,406,32,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,16,15,9,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 1,17,15,10,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,18,Demand Across Timeslice,716,231,60,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,18,Demand Across Timeslice,624,-1,60,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,19,2,18,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,20,1,18,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,21,18,15,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
@@ -363,476 +369,45 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,90,0
 1,25,6,15,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,26,7,15,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,27,8,15,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,28,CES RHS,1089,341,38,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,29,12,28,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,30,18,28,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,28,CES RHS,997,109,38,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,31,11,15,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,32,28,15,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,33,3,15,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,34,Region Numbers,353,1398,34,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,35,Timeslice Numbers,312,1460,36,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,36,Hour Numbers,330,1531,52,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,37,Build Gas Additions,1342,932,36,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,38,Build Wind Additions,1344,1004,40,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,39,Gen Gas,1312,1104,33,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,40,Gen Wind,1276,1163,37,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-1,41,9,37,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,42,34,37,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,43,34,38,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,44,35,39,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,45,36,40,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,46,9,38,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,47,9,39,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,48,9,40,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-1,49,36,39,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,50,34,39,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,51,34,40,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
-1,52,35,40,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,34,Region Numbers,1054,844,34,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,35,Timeslice Numbers,220,1228,36,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,36,Hour Numbers,238,1299,52,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,37,Reserve Margin,1299,214,57,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,38,37,15,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,39,12,28,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,40,18,28,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,41,Capacity Cost by Region,1085,494,53,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,42,9,41,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,43,34,41,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,45,Electricity source number,672,884,55,18,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,46,45,55,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,47,9,55,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,48,34,55,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,49,Last Year Installed Capacity,848,747,40,20,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,50,48,549,739,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,52,54,49,4,0,0,22,0,0,0,-1--1--1,,1|(748,739)|
+1,53,54,50,100,0,0,22,0,0,0,-1--1--1,,1|(618,739)|
+11,54,0,683,739,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,55,New Capacity,683,774,41,27,40,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,56,49,3,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,57,55,3,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,58,Start Year Capacity,856,880,37,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,59,58,49,0,0,0,0,0,128,1,-1--1--1,,1|(0,0)|
+1,60,49,15,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 ///---\\\
 :L<%^E!@
 1:current.vdfx
 4:Time
-5:Build Wind Additions[Region]
-6:average fall
-6:average spring
-6:average summer
+5:Capacity Cost by Region[Region]
 6:average winter
 6:build gasCC
 6:build wind
 6:C1
-6:cap gasCC average fall Hour0
-6:cap gasCC average fall Hour1
-6:cap gasCC average fall Hour10
-6:cap gasCC average fall Hour11
-6:cap gasCC average fall Hour12
-6:cap gasCC average fall Hour13
-6:cap gasCC average fall Hour14
-6:cap gasCC average fall Hour15
-6:cap gasCC average fall Hour16
-6:cap gasCC average fall Hour17
-6:cap gasCC average fall Hour18
-6:cap gasCC average fall Hour19
-6:cap gasCC average fall Hour2
-6:cap gasCC average fall Hour20
-6:cap gasCC average fall Hour21
-6:cap gasCC average fall Hour22
-6:cap gasCC average fall Hour23
-6:cap gasCC average fall Hour3
-6:cap gasCC average fall Hour4
-6:cap gasCC average fall Hour5
-6:cap gasCC average fall Hour6
-6:cap gasCC average fall Hour7
-6:cap gasCC average fall Hour8
-6:cap gasCC average fall Hour9
-6:cap gasCC average spring Hour0
-6:cap gasCC average spring Hour1
-6:cap gasCC average spring Hour10
-6:cap gasCC average spring Hour11
-6:cap gasCC average spring Hour12
-6:cap gasCC average spring Hour13
-6:cap gasCC average spring Hour14
-6:cap gasCC average spring Hour15
-6:cap gasCC average spring Hour16
-6:cap gasCC average spring Hour17
-6:cap gasCC average spring Hour18
-6:cap gasCC average spring Hour19
-6:cap gasCC average spring Hour2
-6:cap gasCC average spring Hour20
-6:cap gasCC average spring Hour21
-6:cap gasCC average spring Hour22
-6:cap gasCC average spring Hour23
-6:cap gasCC average spring Hour3
-6:cap gasCC average spring Hour4
-6:cap gasCC average spring Hour5
-6:cap gasCC average spring Hour6
-6:cap gasCC average spring Hour7
-6:cap gasCC average spring Hour8
-6:cap gasCC average spring Hour9
-6:cap gasCC average summer Hour0
-6:cap gasCC average summer Hour1
-6:cap gasCC average summer Hour10
-6:cap gasCC average summer Hour11
-6:cap gasCC average summer Hour12
-6:cap gasCC average summer Hour13
-6:cap gasCC average summer Hour14
-6:cap gasCC average summer Hour15
-6:cap gasCC average summer Hour16
-6:cap gasCC average summer Hour17
-6:cap gasCC average summer Hour18
-6:cap gasCC average summer Hour19
-6:cap gasCC average summer Hour2
-6:cap gasCC average summer Hour20
-6:cap gasCC average summer Hour21
-6:cap gasCC average summer Hour22
-6:cap gasCC average summer Hour23
-6:cap gasCC average summer Hour3
-6:cap gasCC average summer Hour4
-6:cap gasCC average summer Hour5
-6:cap gasCC average summer Hour6
-6:cap gasCC average summer Hour7
-6:cap gasCC average summer Hour8
-6:cap gasCC average summer Hour9
-6:cap gasCC average winter Hour0
-6:cap gasCC average winter Hour1
-6:cap gasCC average winter Hour10
-6:cap gasCC average winter Hour11
-6:cap gasCC average winter Hour12
-6:cap gasCC average winter Hour13
-6:cap gasCC average winter Hour14
-6:cap gasCC average winter Hour15
-6:cap gasCC average winter Hour16
-6:cap gasCC average winter Hour17
-6:cap gasCC average winter Hour18
-6:cap gasCC average winter Hour19
-6:cap gasCC average winter Hour2
-6:cap gasCC average winter Hour20
-6:cap gasCC average winter Hour21
-6:cap gasCC average winter Hour22
-6:cap gasCC average winter Hour23
-6:cap gasCC average winter Hour3
-6:cap gasCC average winter Hour4
-6:cap gasCC average winter Hour5
-6:cap gasCC average winter Hour6
-6:cap gasCC average winter Hour7
-6:cap gasCC average winter Hour8
-6:cap gasCC average winter Hour9
-6:cap gasCC peak summer Hour0
-6:cap gasCC peak summer Hour1
-6:cap gasCC peak summer Hour10
-6:cap gasCC peak summer Hour11
-6:cap gasCC peak summer Hour12
-6:cap gasCC peak summer Hour13
-6:cap gasCC peak summer Hour14
-6:cap gasCC peak summer Hour15
-6:cap gasCC peak summer Hour16
-6:cap gasCC peak summer Hour17
-6:cap gasCC peak summer Hour18
-6:cap gasCC peak summer Hour19
-6:cap gasCC peak summer Hour2
-6:cap gasCC peak summer Hour20
-6:cap gasCC peak summer Hour21
-6:cap gasCC peak summer Hour22
-6:cap gasCC peak summer Hour23
-6:cap gasCC peak summer Hour3
-6:cap gasCC peak summer Hour4
-6:cap gasCC peak summer Hour5
-6:cap gasCC peak summer Hour6
-6:cap gasCC peak summer Hour7
-6:cap gasCC peak summer Hour8
-6:cap gasCC peak summer Hour9
-6:cap gasCC peak winter Hour0
-6:cap gasCC peak winter Hour1
-6:cap gasCC peak winter Hour10
-6:cap gasCC peak winter Hour11
-6:cap gasCC peak winter Hour12
-6:cap gasCC peak winter Hour13
-6:cap gasCC peak winter Hour14
-6:cap gasCC peak winter Hour15
-6:cap gasCC peak winter Hour16
-6:cap gasCC peak winter Hour17
-6:cap gasCC peak winter Hour18
-6:cap gasCC peak winter Hour19
-6:cap gasCC peak winter Hour2
-6:cap gasCC peak winter Hour20
-6:cap gasCC peak winter Hour21
-6:cap gasCC peak winter Hour22
-6:cap gasCC peak winter Hour23
-6:cap gasCC peak winter Hour3
-6:cap gasCC peak winter Hour4
-6:cap gasCC peak winter Hour5
-6:cap gasCC peak winter Hour6
-6:cap gasCC peak winter Hour7
-6:cap gasCC peak winter Hour8
-6:cap gasCC peak winter Hour9
-6:cap wind average fall Hour0
-6:cap wind average fall Hour1
-6:cap wind average fall Hour10
-6:cap wind average fall Hour11
-6:cap wind average fall Hour12
-6:cap wind average fall Hour13
-6:cap wind average fall Hour14
-6:cap wind average fall Hour15
-6:cap wind average fall Hour16
-6:cap wind average fall Hour17
-6:cap wind average fall Hour18
-6:cap wind average fall Hour19
-6:cap wind average fall Hour2
-6:cap wind average fall Hour20
-6:cap wind average fall Hour21
-6:cap wind average fall Hour22
-6:cap wind average fall Hour23
-6:cap wind average fall Hour3
-6:cap wind average fall Hour4
-6:cap wind average fall Hour5
-6:cap wind average fall Hour6
-6:cap wind average fall Hour7
-6:cap wind average fall Hour8
-6:cap wind average fall Hour9
-6:cap wind average spring Hour0
-6:cap wind average spring Hour1
-6:cap wind average spring Hour10
-6:cap wind average spring Hour11
-6:cap wind average spring Hour12
-6:cap wind average spring Hour13
-6:cap wind average spring Hour14
-6:cap wind average spring Hour15
-6:cap wind average spring Hour16
-6:cap wind average spring Hour17
-6:cap wind average spring Hour18
-6:cap wind average spring Hour19
-6:cap wind average spring Hour2
-6:cap wind average spring Hour20
-6:cap wind average spring Hour21
-6:cap wind average spring Hour22
-6:cap wind average spring Hour23
-6:cap wind average spring Hour3
-6:cap wind average spring Hour4
-6:cap wind average spring Hour5
-6:cap wind average spring Hour6
-6:cap wind average spring Hour7
-6:cap wind average spring Hour8
-6:cap wind average spring Hour9
-6:cap wind average summer Hour0
-6:cap wind average summer Hour1
-6:cap wind average summer Hour10
-6:cap wind average summer Hour11
-6:cap wind average summer Hour12
-6:cap wind average summer Hour13
-6:cap wind average summer Hour14
-6:cap wind average summer Hour15
-6:cap wind average summer Hour16
-6:cap wind average summer Hour17
-6:cap wind average summer Hour18
-6:cap wind average summer Hour19
-6:cap wind average summer Hour2
-6:cap wind average summer Hour20
-6:cap wind average summer Hour21
-6:cap wind average summer Hour22
-6:cap wind average summer Hour23
-6:cap wind average summer Hour3
-6:cap wind average summer Hour4
-6:cap wind average summer Hour5
-6:cap wind average summer Hour6
-6:cap wind average summer Hour7
-6:cap wind average summer Hour8
-6:cap wind average summer Hour9
-6:cap wind average winter Hour0
-6:cap wind average winter Hour1
-6:cap wind average winter Hour10
-6:cap wind average winter Hour11
-6:cap wind average winter Hour12
-6:cap wind average winter Hour13
-6:cap wind average winter Hour14
-6:cap wind average winter Hour15
-6:cap wind average winter Hour16
-6:cap wind average winter Hour17
-6:cap wind average winter Hour18
-6:cap wind average winter Hour19
-6:cap wind average winter Hour2
-6:cap wind average winter Hour20
-6:cap wind average winter Hour21
-6:cap wind average winter Hour22
-6:cap wind average winter Hour23
-6:cap wind average winter Hour3
-6:cap wind average winter Hour4
-6:cap wind average winter Hour5
-6:cap wind average winter Hour6
-6:cap wind average winter Hour7
-6:cap wind average winter Hour8
-6:cap wind average winter Hour9
-6:cap wind peak summer Hour0
-6:cap wind peak summer Hour1
-6:cap wind peak summer Hour10
-6:cap wind peak summer Hour11
-6:cap wind peak summer Hour12
-6:cap wind peak summer Hour13
-6:cap wind peak summer Hour14
-6:cap wind peak summer Hour15
-6:cap wind peak summer Hour16
-6:cap wind peak summer Hour17
-6:cap wind peak summer Hour18
-6:cap wind peak summer Hour19
-6:cap wind peak summer Hour2
-6:cap wind peak summer Hour20
-6:cap wind peak summer Hour21
-6:cap wind peak summer Hour22
-6:cap wind peak summer Hour23
-6:cap wind peak summer Hour3
-6:cap wind peak summer Hour4
-6:cap wind peak summer Hour5
-6:cap wind peak summer Hour6
-6:cap wind peak summer Hour7
-6:cap wind peak summer Hour8
-6:cap wind peak summer Hour9
-6:cap wind peak winter Hour0
-6:cap wind peak winter Hour1
-6:cap wind peak winter Hour10
-6:cap wind peak winter Hour11
-6:cap wind peak winter Hour12
-6:cap wind peak winter Hour13
-6:cap wind peak winter Hour14
-6:cap wind peak winter Hour15
-6:cap wind peak winter Hour16
-6:cap wind peak winter Hour17
-6:cap wind peak winter Hour18
-6:cap wind peak winter Hour19
-6:cap wind peak winter Hour2
-6:cap wind peak winter Hour20
-6:cap wind peak winter Hour21
-6:cap wind peak winter Hour22
-6:cap wind peak winter Hour23
-6:cap wind peak winter Hour3
-6:cap wind peak winter Hour4
-6:cap wind peak winter Hour5
-6:cap wind peak winter Hour6
-6:cap wind peak winter Hour7
-6:cap wind peak winter Hour8
-6:cap wind peak winter Hour9
-6:CES total
-6:dem average fall Hour0
-6:dem average fall Hour1
-6:dem average fall Hour10
-6:dem average fall Hour11
-6:dem average fall Hour12
-6:dem average fall Hour13
-6:dem average fall Hour14
-6:dem average fall Hour15
-6:dem average fall Hour16
-6:dem average fall Hour17
-6:dem average fall Hour18
-6:dem average fall Hour19
-6:dem average fall Hour2
-6:dem average fall Hour20
-6:dem average fall Hour21
-6:dem average fall Hour22
-6:dem average fall Hour23
-6:dem average fall Hour3
-6:dem average fall Hour4
-6:dem average fall Hour5
-6:dem average fall Hour6
-6:dem average fall Hour7
-6:dem average fall Hour8
-6:dem average fall Hour9
-6:dem average spring Hour0
-6:dem average spring Hour1
-6:dem average spring Hour10
-6:dem average spring Hour11
-6:dem average spring Hour12
-6:dem average spring Hour13
-6:dem average spring Hour14
-6:dem average spring Hour15
-6:dem average spring Hour16
-6:dem average spring Hour17
-6:dem average spring Hour18
-6:dem average spring Hour19
-6:dem average spring Hour2
-6:dem average spring Hour20
-6:dem average spring Hour21
-6:dem average spring Hour22
-6:dem average spring Hour23
-6:dem average spring Hour3
-6:dem average spring Hour4
-6:dem average spring Hour5
-6:dem average spring Hour6
-6:dem average spring Hour7
-6:dem average spring Hour8
-6:dem average spring Hour9
-6:dem average summer Hour0
-6:dem average summer Hour1
-6:dem average summer Hour10
-6:dem average summer Hour11
-6:dem average summer Hour12
-6:dem average summer Hour13
-6:dem average summer Hour14
-6:dem average summer Hour15
-6:dem average summer Hour16
-6:dem average summer Hour17
-6:dem average summer Hour18
-6:dem average summer Hour19
-6:dem average summer Hour2
-6:dem average summer Hour20
-6:dem average summer Hour21
-6:dem average summer Hour22
-6:dem average summer Hour23
-6:dem average summer Hour3
-6:dem average summer Hour4
-6:dem average summer Hour5
-6:dem average summer Hour6
-6:dem average summer Hour7
-6:dem average summer Hour8
-6:dem average summer Hour9
 6:dem average winter Hour0
-6:dem average winter Hour1
-6:dem average winter Hour10
-6:dem average winter Hour11
-6:dem average winter Hour12
-6:dem average winter Hour13
-6:dem average winter Hour14
-6:dem average winter Hour15
-6:dem average winter Hour16
-6:dem average winter Hour17
-6:dem average winter Hour18
-6:dem average winter Hour19
-6:dem average winter Hour2
-6:dem average winter Hour20
-6:dem average winter Hour21
-6:dem average winter Hour22
-6:dem average winter Hour23
-6:dem average winter Hour3
-6:dem average winter Hour4
-6:dem average winter Hour5
-6:dem average winter Hour6
-6:dem average winter Hour7
-6:dem average winter Hour8
-6:dem average winter Hour9
-6:dem peak summer Hour0
-6:dem peak summer Hour1
-6:dem peak summer Hour10
-6:dem peak summer Hour11
-6:dem peak summer Hour12
-6:dem peak summer Hour13
-6:dem peak summer Hour14
-6:dem peak summer Hour15
-6:dem peak summer Hour16
-6:dem peak summer Hour17
-6:dem peak summer Hour18
-6:dem peak summer Hour19
-6:dem peak summer Hour2
-6:dem peak summer Hour20
-6:dem peak summer Hour21
-6:dem peak summer Hour22
-6:dem peak summer Hour23
-6:dem peak summer Hour3
-6:dem peak summer Hour4
-6:dem peak summer Hour5
-6:dem peak summer Hour6
-6:dem peak summer Hour7
-6:dem peak summer Hour8
-6:dem peak summer Hour9
-6:dem peak winter Hour0
-6:dem peak winter Hour1
-6:dem peak winter Hour10
-6:dem peak winter Hour11
-6:dem peak winter Hour12
-6:dem peak winter Hour13
-6:dem peak winter Hour14
-6:dem peak winter Hour15
-6:dem peak winter Hour16
-6:dem peak winter Hour17
-6:dem peak winter Hour18
-6:dem peak winter Hour19
-6:dem peak winter Hour2
-6:dem peak winter Hour20
-6:dem peak winter Hour21
-6:dem peak winter Hour22
-6:dem peak winter Hour23
-6:dem peak winter Hour3
-6:dem peak winter Hour4
-6:dem peak winter Hour5
-6:dem peak winter Hour6
-6:dem peak winter Hour7
-6:dem peak winter Hour8
-6:dem peak winter Hour9
 6:gasCC
 6:gen gasCC average fall Hour0
 6:gen gasCC average fall Hour1
@@ -1123,31 +698,6 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,90,0
 6:gen wind peak winter Hour8
 6:gen wind peak winter Hour9
 6:Hour0
-6:Hour1
-6:Hour10
-6:Hour11
-6:Hour12
-6:Hour13
-6:Hour14
-6:Hour15
-6:Hour16
-6:Hour17
-6:Hour18
-6:Hour19
-6:Hour2
-6:Hour20
-6:Hour21
-6:Hour22
-6:Hour23
-6:Hour3
-6:Hour4
-6:Hour5
-6:Hour6
-6:Hour7
-6:Hour8
-6:Hour9
-6:peak summer
-6:peak winter
 6:Region1
 6:Region10
 6:Region2
@@ -1160,7 +710,6 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,90,0
 6:Region9
 6:wind
 6:X1
-6:X2
 9:current
 19:90,0
 24:2025
