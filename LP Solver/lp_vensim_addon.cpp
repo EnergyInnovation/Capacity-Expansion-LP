@@ -1,14 +1,15 @@
 // lp_vensim_addon.cpp — HiGHS C API (15-arg Highs_passLp)
-// Region-first layout; global CES; per-hour reserve; per-region cost breakout.
+// Adds RPS ACP (soft constraint via slack) and reorders LP_Solve so CES block then RPS block.
+// Region-first layout; per-hour reserve; per-region cost breakout; Vensim version stays 62051.
 //
 // Build (x64 Native Tools for VS):
 //   del /q lp_vensim_addon.obj lp_vensim_addon.lib lp_vensim_addon.exp lp_vensim_addon.dll
 //   cl /nologo /LD /O2 /EHsc /MT ^
 //     "lp_vensim_addon.cpp" ^
-//     /I "C:\vcpkg\installed\x64-windows-static\include" ^
-//     /I "C:\vcpkg\installed\x64-windows-static\include\highs" ^
+//     /I "C:\\vcpkg\\installed\\x64-windows-static\\include" ^
+//     /I "C:\\vcpkg\\installed\\x64-windows-static\\include\\highs" ^
 //     /link /NOLOGO ^
-//     /LIBPATH:"C:\vcpkg\installed\x64-windows-static\lib" highs.lib ^
+//     /LIBPATH:"C:\\vcpkg\\installed\\x64-windows-static\\lib" highs.lib zlib.lib ^
 //     /OUT:"lp_vensim_addon.dll"
 // If you get LNK2038 CRT mismatch, switch /MT -> /MD to match highs.lib.
 
@@ -20,7 +21,7 @@
 #include <cstdint>
 #include <cmath>
 
-#include <highs/interfaces/highs_c_api.h>  // vcpkg header
+#include <highs/interfaces/highs_c_api.h>  // vcpkg header (C API)
 
 // ===== Vensim ABI =====
 #if defined(_MSC_VER)
@@ -48,7 +49,7 @@ typedef union {
 
 // ---------- Global cache ----------
 static std::mutex          g_mutex;
-static std::vector<double> g_solution;    // size N
+static std::vector<double> g_solution;    // size N (includes slacks if present)
 static std::vector<double> g_cost_cap;    // size R
 static std::vector<double> g_cost_energy; // size R
 static int                 g_status   = -1;   // HiGHS model status
@@ -58,16 +59,28 @@ static bool                g_solved   = false;
 
 // Shape of last solve
 static int g_R=0, g_S=0, g_H=0, g_E=0;
-static int g_T=0, g_colsPerReg=0, g_N=0;
+static int g_T=0, g_colsPerReg=0, g_N_region=0, g_N_total=0;
 
-static inline void reset_cache(int R=0,int E=0,int T=0){
-  int colsPerReg = (E>0 ? E*(T+1) : 0);
-  int N = (R>0 ? R*colsPerReg : 0);
-  g_solution.assign(N, 0.0);
+// Slack column indices (global, appended after region blocks; -1 if not present)
+static int g_colSlackCES = -1;
+static int g_colSlackRPS = -1;
+
+static inline void reset_cache(int R=0,int E=0,int T=0, bool haveCESslack=false, bool haveRPSslack=false){
+  g_colsPerReg = (E>0 ? E*(T+1) : 0);           // E build + E*T gen
+  g_N_region   = (R>0 ? R*g_colsPerReg : 0);    // region-scoped variables
+  int extra    = (haveCESslack?1:0) + (haveRPSslack?1:0);
+  g_N_total    = g_N_region + extra;
+
+  g_solution.assign(g_N_total, 0.0);
   g_cost_cap.assign(R>0?R:0, 0.0);
   g_cost_energy.assign(R>0?R:0, 0.0);
   g_status=-1; g_lastCode=-999; g_obj=0.0; g_solved=false;
-  g_R=R; g_E=E; g_T=T; g_colsPerReg=colsPerReg; g_N=N;
+  g_R=R; g_E=E; g_T=T;
+
+  // Set slack indices deterministically
+  int colOffset = g_N_region;
+  g_colSlackCES = haveCESslack ? colOffset++ : -1;
+  g_colSlackRPS = haveRPSslack ? colOffset++ : -1;
 }
 
 // ---------- Index helpers (Region-first) ----------
@@ -105,7 +118,7 @@ static void triplets_to_csc(
 }
 
 // ---------- Core solver (HiGHS C API: 15-arg Highs_passLp) ----------
-static double solve_global_ces_reserve(
+static double solve_global_policies(
   // Data (Region-first)
   const double* Demand,            // [R,S,H]
   const double* CF,                // [R,E,S,H]
@@ -115,34 +128,48 @@ static double solve_global_ces_reserve(
   const double* Fuel,              // [E]
   const double* VOM,               // [E]
   const double* ExistingCap,       // [R,E]
+  // CES
   const double* CES_q,             // [E] weights
-  double CES_rhs,                  // scalar
+  double CES_rhs,                  // scalar MWh (>=0 to enable hard CES)
+  double CES_ACP,                  // scalar $/MWh (>=0 enables ACP slack)
+  // RPS
+  const double* RPS_q,             // [E] weights
+  double RPS_rhs,                  // scalar MWh (>=0 to enable hard RPS)
+  double RPS_ACP,                  // scalar $/MWh (>=0 enables ACP slack)
+  // System
   double ReserveMargin,            // scalar (e.g., 0.15)
   int R, int S, int H, int E
 ){
   const int T = S*H;
-  reset_cache(R,E,T);
+
+  const bool useCESrow   = (CES_rhs > 0.0) || (CES_ACP > 0.0);
+  const bool addCESSlack = (CES_ACP > 0.0);
+
+  const bool useRPSrow   = (RPS_rhs > 0.0) || (RPS_ACP > 0.0);
+  const bool addRPSSlack = (RPS_ACP > 0.0);
+
+  reset_cache(R,E,T, addCESSlack, addRPSSlack);
+  g_S = S; g_H = H;
 
   // Row indexing
-  const int ROW_DEM0   = 0;               // R*T
-  const int ROW_CAP0   = ROW_DEM0 + R*T;  // R*E*T
-  const int ROW_RSV0   = ROW_CAP0 + R*E*T;// R*T if used
+  const int ROW_DEM0   = 0;                               // R*T
+  const int ROW_CAP0   = ROW_DEM0 + R*T;                  // R*E*T
+  const int ROW_RSV0   = ROW_CAP0 + R*E*T;                // R*T (if used)
   int rowCount         = ROW_CAP0 + R*E*T;
   const bool useReserve = (ReserveMargin > 0.0);
   if (useReserve) rowCount += R*T;
 
-  bool useCES = (CES_rhs > 0.0);
-  if (useCES){
-    bool anyQ=false; for (int e=0;e<E;++e) if (CES_q[e]!=0.0){ anyQ=true; break; }
-    if (!anyQ) useCES=false;
-  }
   const int ROW_CES = rowCount;
-  if (useCES) rowCount += 1;
+  if (useCESrow) rowCount += 1;
+
+  const int ROW_RPS = rowCount;
+  if (useRPSrow) rowCount += 1;
 
   // Columns
   const double INF = 1e30;
-  std::vector<double> col_cost(g_N, 0.0), col_lo(g_N, 0.0), col_hi(g_N, INF);
+  std::vector<double> col_cost(g_N_total, 0.0), col_lo(g_N_total, 0.0), col_hi(g_N_total, INF);
 
+  // Region-scoped variables
   for (int r=0; r<R; ++r){
     int base = r * g_colsPerReg;
     // Build vars
@@ -162,6 +189,10 @@ static double solve_global_ces_reserve(
     }
   }
 
+  // Slack columns (global at end)
+  if (g_colSlackCES>=0){ col_cost[g_colSlackCES] = CES_ACP; col_lo[g_colSlackCES]=0.0; col_hi[g_colSlackCES]=INF; }
+  if (g_colSlackRPS>=0){ col_cost[g_colSlackRPS] = RPS_ACP; col_lo[g_colSlackRPS]=0.0; col_hi[g_colSlackRPS]=INF; }
+
   // Row bounds
   std::vector<double> row_lo(rowCount, -INF), row_hi(rowCount, INF);
 
@@ -175,7 +206,7 @@ static double solve_global_ces_reserve(
         row_lo[row] = rhs; row_hi[row] = rhs;
       }
 
-  // Capacity (≥)
+  // Capacity (≥)   [-g + CFH*build >= -CFH*Xcap]
   for (int r=0; r<R; ++r)
     for (int e=0; e<E; ++e){
       double xcap = ExistingCap[idx_xcap(r,e,E)];
@@ -207,8 +238,15 @@ static double solve_global_ces_reserve(
   }
 
   // CES (≥)
-  if (useCES){
-    row_lo[ROW_CES] = CES_rhs; row_hi[ROW_CES] = INF;
+  if (useCESrow){
+    row_lo[ROW_CES] = std::max(0.0, CES_rhs);
+    row_hi[ROW_CES] = INF;
+  }
+
+  // RPS (≥)
+  if (useRPSrow){
+    row_lo[ROW_RPS] = std::max(0.0, RPS_rhs);
+    row_hi[ROW_RPS] = INF;
   }
 
   // Triplets
@@ -216,7 +254,8 @@ static double solve_global_ces_reserve(
   Tpls.reserve(
     (size_t)R*(size_t)E*(size_t)T*3
     + (useReserve? (size_t)R*(size_t)T*(size_t)E : 0)
-    + (useCES? (size_t)R*(size_t)E*(size_t)T : 0)
+    + (useCESrow? (size_t)R*(size_t)E*(size_t)T + (g_colSlackCES>=0?1:0) : 0)
+    + (useRPSrow? (size_t)R*(size_t)E*(size_t)T + (g_colSlackRPS>=0?1:0) : 0)
     + (size_t)R*(size_t)T*(size_t)E
   );
 
@@ -259,22 +298,38 @@ static double solve_global_ces_reserve(
         }
 
         // CES row
-        if (useCES){
-          int rowC = ROW_CES;
+        if (useCESrow){
+          int rowCES = ROW_CES;
           for (int e=0; e<E; ++e){
             double q = CES_q[e];
             if (q!=0.0){
               int colG = base + col_gen_e_tau(E, e, tau, T);
-              Tpls.push_back({rowC, colG, q});
+              Tpls.push_back({rowCES, colG, q});
+            }
+          }
+        }
+
+        // RPS row
+        if (useRPSrow){
+          int rowRPS = ROW_RPS;
+          for (int e=0; e<E; ++e){
+            double q = RPS_q[e];
+            if (q!=0.0){
+              int colG = base + col_gen_e_tau(E, e, tau, T);
+              Tpls.push_back({rowRPS, colG, q});
             }
           }
         }
       }
   }
 
+  // Slack coefficients
+  if (useCESrow && g_colSlackCES>=0) Tpls.push_back({ROW_CES, g_colSlackCES, 1.0});
+  if (useRPSrow && g_colSlackRPS>=0) Tpls.push_back({ROW_RPS, g_colSlackRPS, 1.0});
+
   // Convert to CSC for HiGHS
   std::vector<int> astart_i; std::vector<int> aindex_i; std::vector<double> avalue;
-  triplets_to_csc(rowCount, g_N, Tpls, astart_i, aindex_i, avalue);
+  triplets_to_csc(rowCount, g_N_total, Tpls, astart_i, aindex_i, avalue);
 
   // HiGHS expects HighsInt for starts/indices
   std::vector<HighsInt> astart(astart_i.begin(), astart_i.end());
@@ -290,12 +345,12 @@ static double solve_global_ces_reserve(
   //   a_start, a_index, a_value);
   const HighsInt a_format = 1;  // 1 = column-wise (CSC)
   const HighsInt sense    = 1;  // 1 = minimize
-  const double   offset   = 0.0;
+  const double   obj_offset = 0.0;
 
   g_lastCode = Highs_passLp(
     h,
-    (HighsInt)g_N, (HighsInt)rowCount, nnz,
-    a_format, sense, offset,
+    (HighsInt)g_N_total, (HighsInt)rowCount, nnz,
+    a_format, sense, obj_offset,
     col_cost.data(), col_lo.data(), col_hi.data(),
     row_lo.data(), row_hi.data(),
     astart.data(), aindex.data(), avalue.data()
@@ -313,12 +368,12 @@ static double solve_global_ces_reserve(
   if (g_lastCode==0){
     double obj = Highs_getObjectiveValue(h);
 
-    std::vector<double> col_val(g_N, 0.0), col_dual(g_N,0.0);
+    std::vector<double> col_val(g_N_total, 0.0), col_dual(g_N_total,0.0);
     std::vector<double> row_val(std::max(1,rowCount), 0.0), row_dual(std::max(1,rowCount), 0.0);
     int sol_rc = Highs_getSolution(h, col_val.data(), col_dual.data(), row_val.data(), row_dual.data());
     if (sol_rc==0) {
       g_solution = std::move(col_val);
-      // Cost breakout (by region)
+      // Cost breakout (by region) — slacks costs are NOT counted in regional buckets
       for (int r=0; r<g_R; ++r){
         double cc=0.0, ce=0.0;
         int base = r * g_colsPerReg;
@@ -346,7 +401,7 @@ static double solve_global_ces_reserve(
 }
 
 // ---------- Vensim glue ----------
-static const int EXTERN_VCODE = 62051;
+static const int EXTERN_VCODE = 62051; // keep version
 extern "C" __declspec(dllexport) int VEFCC version_info(){ return EXTERN_VCODE; }
 
 enum {
@@ -373,10 +428,11 @@ extern "C" __declspec(dllexport) int VEFCC user_definition(
 
   switch (setup_index){
     case 0:
-      *sym        = (char*)"LP_SOLVE_RTH_XCAP_CES_RES";
-      *arglist    = (char*)"{Demand},{Capacity_factor},{Hours},{CAPEX},{FOM},{Fuel},{VOM},{ExistingCap},{CES_qualifying},CES_rhs,ReserveMargin,R,S,H,E";
-      *num_args   = 15;
-      *num_vector = 9;     // first 9 are vectors
+      *sym        = (char*)"LP_Solve";
+      // Vectors first (10): Demand, CF, Hours, CAPEX, FOM, Fuel, VOM, ExistingCap, CES_q, RPS_q
+      *arglist    = (char*)"{Demand},{Capacity_factor},{Hours},{CAPEX},{FOM},{Fuel},{VOM},{ExistingCap},{CES_qualifying},{RPS_qualifying},CES_rhs,CES_ACP,RPS_rhs,RPS_ACP,ReserveMargin,R,S,H,E";
+      *num_args   = 19;
+      *num_vector = 10;
       *func_index = F_SOLVE;
       return 1;
 
@@ -399,7 +455,7 @@ extern "C" __declspec(dllexport) int VEFCC vensim_external(VV* val, int nval, in
   switch (funcid){
 
     case F_SOLVE: {
-      if (nval < 15) { val[0].val = 1e308; return 0; }
+      if (nval < 19) { val[0].val = 1e308; return 0; }
 
       const double* Dem    = val[0].vec->firstval; // [R,S,H]
       const double* CF     = val[1].vec->firstval; // [R,E,S,H]
@@ -409,18 +465,26 @@ extern "C" __declspec(dllexport) int VEFCC vensim_external(VV* val, int nval, in
       const double* Fuel   = val[5].vec->firstval; // [E]
       const double* VOM    = val[6].vec->firstval; // [E]
       const double* XCap   = val[7].vec->firstval; // [R,E]
-      const double* CES_q  = val[8].vec->firstval; // [E]
 
-      double CES_rhs       = val[9].val;
-      double ReserveMargin = val[10].val;
-      int R = (int)(val[11].val + 0.5);
-      int S = (int)(val[12].val + 0.5);
-      int H = (int)(val[13].val + 0.5);
-      int E = (int)(val[14].val + 0.5);
+      const double* CES_q  = val[8].vec->firstval;  // [E]
+      const double* RPS_q  = val[9].vec->firstval;  // [E]
 
-      val[0].val = solve_global_ces_reserve(
-        Dem, CF, Hours, CAPEX, FOM, Fuel, VOM, XCap, CES_q,
-        CES_rhs, ReserveMargin, R,S,H,E
+      double CES_rhs       = val[10].val;  // MWh
+      double CES_ACP       = val[11].val;  // $/MWh
+      double RPS_rhs       = val[12].val;  // MWh
+      double RPS_ACP       = val[13].val;  // $/MWh
+
+      double ReserveMargin = val[14].val;
+      int R = (int)(val[15].val + 0.5);
+      int S = (int)(val[16].val + 0.5);
+      int H = (int)(val[17].val + 0.5);
+      int E = (int)(val[18].val + 0.5);
+
+      val[0].val = solve_global_policies(
+        Dem, CF, Hours, CAPEX, FOM, Fuel, VOM, XCap,
+        CES_q, CES_rhs, CES_ACP,
+        RPS_q, RPS_rhs, RPS_ACP,
+        ReserveMargin, R,S,H,E
       );
       return 1;
     }
