@@ -1,71 +1,28 @@
-// lp_vensim_addon.cpp
-// GLPK-based LP addon for Vensim (single solver; global CES; hourly reserve margin).
+// lp_vensim_addon.cpp — HiGHS C API (15-arg Highs_passLp)
+// Region-first layout; global CES; per-hour reserve; per-region cost breakout.
 //
-// Column layout per region r (0..R-1):
-//   [Build[r, e=0..E-1]]  (E vars)
-//   [Gen[r, e=0..E-1, tau=0..T-1]]  (E*T vars, with tau = s*H + h)
-// Total per region: E + E*T = E*(T+1).  Total N = R * E*(T+1).
-//
-// Rows:
-//  (1) Demand balance (R*T rows):   Sum_e Gen[r,e,tau] = Demand[r,tau]
-//  (2) Capacity limit (R*E*T rows): -Gen[r,e,tau] + CF[r,e,tau]*Hours[tau]*Build[r,e] >= -CF[r,e,tau]*Hours[tau]*Existing[r,e]
-//  (3) Reserve (R*T rows, optional if RM>0):
-//        Sum_e CF[r,e,tau]*Hours[tau]*Build[r,e] >= (1+RM)*Demand[r,tau] - Sum_e CF[r,e,tau]*Hours[tau]*Existing[r,e]
-//  (4) Global CES (1 row, optional if CES_rhs>0 && any q[e]!=0):
-//        Sum_{r,e,tau} q[e] * Gen[r,e,tau] >= CES_rhs
-//
-// Objective:
-//   Minimize Sum_r [ Sum_e (CAPEX[e]+FOM[e])*Build[r,e] + Sum_{e,tau} (Fuel[e]+VOM[e])*Gen[r,e,tau] ]
-//
-// Exports:
-//   LP_SOLVE_RTH_XCAP_CES_RES(
-//     {Demand},{Capacity_factor},{Hours},
-//     {CAPEX},{FOM},{Fuel},{VOM},
-//     {ExistingCap},{CES_qualifying},
-//     CES_rhs, ReserveMargin, R,S,H,E)
-//   Getters:
-//     LP_CAP_ADD(r_pos, e_pos)
-//     LP_GEN(r_pos, e_pos, ts_pos, hr_pos)
-//     LP_COST_CAP(r_pos)   -- capacity cost for region r
-//     LP_COST_ENERGY(r_pos)-- energy (variable) cost for region r
-//     LP_OBJ(), LP_STATUS(), LP_CODE()
-//
-// Build (VS 2022 x64, static GLPK):
+// Build (x64 Native Tools for VS):
+//   del /q lp_vensim_addon.obj lp_vensim_addon.lib lp_vensim_addon.exp lp_vensim_addon.dll
 //   cl /nologo /LD /O2 /EHsc /MT ^
-//     "C:\\Users\\RobbieOrvis\\Models\\Capacity Expansion LP\\LP Solver\\lp_vensim_addon.cpp" ^
-//     /I "C:\\vcpkg\\installed\\x64-windows-static\\include" ^
+//     "lp_vensim_addon.cpp" ^
+//     /I "C:\vcpkg\installed\x64-windows-static\include" ^
+//     /I "C:\vcpkg\installed\x64-windows-static\include\highs" ^
 //     /link /NOLOGO ^
-//     /LIBPATH:"C:\\vcpkg\\installed\\x64-windows-static\\lib" glpk.lib ^
-//     /OUT:"C:\\Users\\RobbieOrvis\\Models\\Capacity Expansion LP\\LP Solver\\lp_vensim_addon.dll"
+//     /LIBPATH:"C:\vcpkg\installed\x64-windows-static\lib" highs.lib ^
+//     /OUT:"lp_vensim_addon.dll"
+// If you get LNK2038 CRT mismatch, switch /MT -> /MD to match highs.lib.
 
 #define NOMINMAX
 #include <windows.h>
 #include <vector>
 #include <mutex>
 #include <algorithm>
+#include <cstdint>
+#include <cmath>
 
-extern "C" {
-  typedef struct glp_prob glp_prob;
-  enum { GLP_MIN=1 };
-  enum { GLP_FR=1, GLP_LO=2, GLP_UP=3, GLP_DB=4, GLP_FX=5 };
-  enum { GLP_UNDEF=1, GLP_FEAS=2, GLP_INFEAS=3, GLP_NOFEAS=4, GLP_OPT=5, GLP_UNBND=6 };
+#include <highs/interfaces/highs_c_api.h>  // vcpkg header
 
-  glp_prob* glp_create_prob(void);
-  void      glp_set_prob_name(glp_prob*, const char*);
-  void      glp_set_obj_dir(glp_prob*, int);
-  void      glp_add_rows(glp_prob*, int);
-  void      glp_set_row_bnds(glp_prob*, int, int, double, double);
-  void      glp_add_cols(glp_prob*, int);
-  void      glp_set_obj_coef(glp_prob*, int, double);
-  void      glp_set_col_bnds(glp_prob*, int, int, double, double);
-  void      glp_load_matrix(glp_prob*, int, const int[], const int[], const double[]);
-  int       glp_simplex(glp_prob*, const void*);
-  int       glp_get_status(glp_prob*);
-  double    glp_get_obj_val(glp_prob*);
-  double    glp_get_col_prim(glp_prob*, int);
-  void      glp_delete_prob(glp_prob*);
-}
-
+// ===== Vensim ABI =====
 #if defined(_MSC_VER)
   #define VEFCC __stdcall
 #else
@@ -91,11 +48,11 @@ typedef union {
 
 // ---------- Global cache ----------
 static std::mutex          g_mutex;
-static std::vector<double> g_solution;          // size N
-static std::vector<double> g_cost_cap;          // size R
-static std::vector<double> g_cost_energy;       // size R
-static int                 g_status   = -1;
-static int                 g_lastCode = -999;
+static std::vector<double> g_solution;    // size N
+static std::vector<double> g_cost_cap;    // size R
+static std::vector<double> g_cost_energy; // size R
+static int                 g_status   = -1;   // HiGHS model status
+static int                 g_lastCode = -999; // HiGHS API return code
 static double              g_obj      = 0.0;
 static bool                g_solved   = false;
 
@@ -113,17 +70,41 @@ static inline void reset_cache(int R=0,int E=0,int T=0){
   g_R=R; g_E=E; g_T=T; g_colsPerReg=colsPerReg; g_N=N;
 }
 
-// ---------- Index helpers (Region-first order) ----------
-static inline int idx_dem(int r,int s,int h,int S,int H){ return ((r*S)+s)*H + h; }                 // [R,S,H]
-static inline int idx_hours(int s,int h,int H){ return s*H + h; }                                    // [S,H]
+// ---------- Index helpers (Region-first) ----------
+static inline int idx_dem(int r,int s,int h,int S,int H){ return ((r*S)+s)*H + h; }                    // [R,S,H]
+static inline int idx_hours(int s,int h,int H){ return s*H + h; }                                       // [S,H]
 static inline int idx_cf(int r,int e,int s,int h,int E,int S,int H){ return (((r*E + e)*S + s)*H + h); } // [R,E,S,H]
-static inline int idx_xcap(int r,int e,int E){ return r*E + e; }                                     // [R,E]
+static inline int idx_xcap(int r,int e,int E){ return r*E + e; }                                        // [R,E]
 
 // Columns (0-based within region block)
 static inline int col_build_e(int e) { return e; } // 0..E-1
 static inline int col_gen_e_tau(int E, int e, int tau, int T){ return E + e*T + tau; } // 0..E*T-1
 
-// ---------- Single solver ----------
+// ---------- Triplet -> CSC ----------
+struct Triplet { int row; int col; double val; };
+
+static void triplets_to_csc(
+  int nRows, int nCols,
+  const std::vector<Triplet>& t,
+  std::vector<int>& astart,
+  std::vector<int>& aindex,
+  std::vector<double>& avalue
+){
+  astart.assign(nCols+1, 0);
+  for (const auto& x : t) { if (x.col>=0 && x.col<nCols) astart[x.col+1]++; }
+  for (int c=0; c<nCols; ++c) astart[c+1] += astart[c];
+  int nnz = (int)t.size();
+  aindex.assign(nnz, 0);
+  avalue.assign(nnz, 0.0);
+  std::vector<int> next = astart;
+  for (const auto& x : t){
+    int p = next[x.col]++;
+    aindex[p] = x.row;
+    avalue[p] = x.val;
+  }
+}
+
+// ---------- Core solver (HiGHS C API: 15-arg Highs_passLp) ----------
 static double solve_global_ces_reserve(
   // Data (Region-first)
   const double* Demand,            // [R,S,H]
@@ -142,194 +123,225 @@ static double solve_global_ces_reserve(
   const int T = S*H;
   reset_cache(R,E,T);
 
-  glp_prob* lp = glp_create_prob();
-  glp_set_prob_name(lp, "vensim_lp_global_ces_reserve");
-  glp_set_obj_dir(lp, GLP_MIN);
-
-  // Row indexing segments
-  const int ROW_DEM0   = 0;               // size R*T
-  const int ROW_CAP0   = ROW_DEM0 + R*T;  // size R*E*T
-  const int ROW_RSV0   = ROW_CAP0 + R*E*T;// size R*T (optional if RM>0)
+  // Row indexing
+  const int ROW_DEM0   = 0;               // R*T
+  const int ROW_CAP0   = ROW_DEM0 + R*T;  // R*E*T
+  const int ROW_RSV0   = ROW_CAP0 + R*E*T;// R*T if used
   int rowCount         = ROW_CAP0 + R*E*T;
-  bool useReserve      = (ReserveMargin > 0.0);
+  const bool useReserve = (ReserveMargin > 0.0);
   if (useReserve) rowCount += R*T;
 
-  // CES row (optional)
   bool useCES = (CES_rhs > 0.0);
   if (useCES){
-    bool anyQ = false;
-    for (int e=0; e<E; ++e) if (CES_q[e] != 0.0){ anyQ = true; break; }
-    if (!anyQ) useCES = false;
+    bool anyQ=false; for (int e=0;e<E;++e) if (CES_q[e]!=0.0){ anyQ=true; break; }
+    if (!anyQ) useCES=false;
   }
-  const int ROW_CES = rowCount; // if used, 1 extra row at end
+  const int ROW_CES = rowCount;
   if (useCES) rowCount += 1;
 
-  glp_add_rows(lp, rowCount);
+  // Columns
+  const double INF = 1e30;
+  std::vector<double> col_cost(g_N, 0.0), col_lo(g_N, 0.0), col_hi(g_N, INF);
 
-  // (1) Demand rows (=)
-  for (int r=0; r<R; ++r){
-    for (int s=0; s<S; ++s){
-      for (int h=0; h<H; ++h){
-        int tau = s*H + h;
-        int row = ROW_DEM0 + r*T + tau + 1;
-        double rhs = Demand[idx_dem(r,s,h,S,H)];
-        glp_set_row_bnds(lp, row, GLP_FX, rhs, rhs);
-      }
-    }
-  }
-
-  // (2) Capacity rows (>= -CF*hrs*Existing)
-  for (int r=0; r<R; ++r){
-    for (int e=0; e<E; ++e){
-      double xcap = ExistingCap[idx_xcap(r,e,E)];
-      for (int s=0; s<S; ++s){
-        for (int h=0; h<H; ++h){
-          int tau = s*H + h;
-          double cf   = CF[idx_cf(r,e,s,h,E,S,H)];
-          double hrs  = Hours[idx_hours(s,h,H)];
-          double lb   = -cf * hrs * xcap;
-          int row     = ROW_CAP0 + ( (r*E + e)*T + tau ) + 1;
-          glp_set_row_bnds(lp, row, GLP_LO, lb, 0.0);
-        }
-      }
-    }
-  }
-
-  // (3) Reserve rows (>=) if used
-  if (useReserve){
-    for (int r=0; r<R; ++r){
-      for (int s=0; s<S; ++s){
-        for (int h=0; h<H; ++h){
-          int tau = s*H + h;
-          // RHS = (1+RM)*Demand[r,tau] - Sum_e CF*hrs*Existing[r,e]
-          double rhs = (1.0 + ReserveMargin) * Demand[idx_dem(r,s,h,S,H)];
-          double hrs = Hours[idx_hours(s,h,H)];
-          for (int e=0; e<E; ++e){
-            rhs -= CF[idx_cf(r,e,s,h,E,S,H)] * hrs * ExistingCap[idx_xcap(r,e,E)];
-          }
-          int row = ROW_RSV0 + r*T + tau + 1;
-          glp_set_row_bnds(lp, row, GLP_LO, rhs, 0.0);
-        }
-      }
-    }
-  }
-
-  // (4) CES row (>=) if used
-  if (useCES){
-    glp_set_row_bnds(lp, ROW_CES + 1, GLP_LO, CES_rhs, 0.0);
-  }
-
-  // Columns (+objective, bounds)
-  glp_add_cols(lp, g_N);
   for (int r=0; r<R; ++r){
     int base = r * g_colsPerReg;
-
     // Build vars
     for (int e=0; e<E; ++e){
       int col = base + col_build_e(e);
-      glp_set_obj_coef(lp, col+1, CAPEX[e] + FOM[e]);
-      glp_set_col_bnds(lp, col+1, GLP_LO, 0.0, 0.0);
+      col_cost[col] = CAPEX[e] + FOM[e];
+      col_lo[col]   = 0.0; col_hi[col] = INF;
     }
     // Gen vars
     for (int e=0; e<E; ++e){
       double c_e = Fuel[e] + VOM[e];
       for (int tau=0; tau<T; ++tau){
         int col = base + col_gen_e_tau(E, e, tau, T);
-        glp_set_obj_coef(lp, col+1, c_e);
-        glp_set_col_bnds(lp, col+1, GLP_LO, 0.0, 0.0);
+        col_cost[col] = c_e;
+        col_lo[col]   = 0.0; col_hi[col] = INF;
       }
     }
   }
 
-  // Sparse triplets
-  std::vector<int> ia(1), ja(1); std::vector<double> ar(1);
+  // Row bounds
+  std::vector<double> row_lo(rowCount, -INF), row_hi(rowCount, INF);
+
+  // Demand (=)
+  for (int r=0; r<R; ++r)
+    for (int s=0; s<S; ++s)
+      for (int h0=0; h0<H; ++h0){
+        int tau = s*H + h0;
+        int row = ROW_DEM0 + r*T + tau;
+        double rhs = Demand[idx_dem(r,s,h0,S,H)];
+        row_lo[row] = rhs; row_hi[row] = rhs;
+      }
+
+  // Capacity (≥)
+  for (int r=0; r<R; ++r)
+    for (int e=0; e<E; ++e){
+      double xcap = ExistingCap[idx_xcap(r,e,E)];
+      for (int s=0; s<S; ++s)
+        for (int h0=0; h0<H; ++h0){
+          int tau = s*H + h0;
+          double cf  = CF[idx_cf(r,e,s,h0,E,S,H)];
+          double hrs = Hours[idx_hours(s,h0,H)];
+          int row = ROW_CAP0 + ((r*E + e)*T + tau);
+          row_lo[row] = -cf * hrs * xcap;  // lower bound
+          row_hi[row] = INF;
+        }
+    }
+
+  // Reserve (≥)
+  if (useReserve){
+    for (int r=0; r<R; ++r)
+      for (int s=0; s<S; ++s)
+        for (int h0=0; h0<H; ++h0){
+          int tau = s*H + h0;
+          double rhs = (1.0 + ReserveMargin) * Demand[idx_dem(r,s,h0,S,H)];
+          double hrs = Hours[idx_hours(s,h0,H)];
+          for (int e=0; e<E; ++e){
+            rhs -= CF[idx_cf(r,e,s,h0,E,S,H)] * hrs * ExistingCap[idx_xcap(r,e,E)];
+          }
+          int row = ROW_RSV0 + r*T + tau;
+          row_lo[row] = rhs; row_hi[row] = INF;
+        }
+  }
+
+  // CES (≥)
+  if (useCES){
+    row_lo[ROW_CES] = CES_rhs; row_hi[ROW_CES] = INF;
+  }
+
+  // Triplets
+  std::vector<Triplet> Tpls;
+  Tpls.reserve(
+    (size_t)R*(size_t)E*(size_t)T*3
+    + (useReserve? (size_t)R*(size_t)T*(size_t)E : 0)
+    + (useCES? (size_t)R*(size_t)E*(size_t)T : 0)
+    + (size_t)R*(size_t)T*(size_t)E
+  );
 
   for (int r=0; r<R; ++r){
     int base = r * g_colsPerReg;
 
-    for (int s=0; s<S; ++s){
-      for (int h=0; h<H; ++h){
-        int tau = s*H + h;
+    for (int s=0; s<S; ++s)
+      for (int h0=0; h0<H; ++h0){
+        int tau = s*H + h0;
+        double hrs = Hours[idx_hours(s,h0,H)];
 
-        // Demand row: Sum_e Gen[r,e,tau] = Demand[r,tau]
-        int rowD = ROW_DEM0 + r*T + tau + 1;
+        // Demand row
+        int rowD = ROW_DEM0 + r*T + tau;
         for (int e=0; e<E; ++e){
           int colG = base + col_gen_e_tau(E, e, tau, T);
-          ia.push_back(rowD); ja.push_back(colG+1); ar.push_back(1.0);
+          Tpls.push_back({rowD, colG, 1.0});
         }
 
-        // Capacity rows: for each e
-        double hrs = Hours[idx_hours(s,h,H)];
+        // Capacity rows
         for (int e=0; e<E; ++e){
-          double cf = CF[idx_cf(r,e,s,h,E,S,H)];
-          int rowC = ROW_CAP0 + ((r*E + e)*T + tau) + 1;
-          int colG = base + col_gen_e_tau(E, e, tau, T);
-          int colB = base + col_build_e(e);
-          ia.push_back(rowC); ja.push_back(colG+1); ar.push_back(-1.0);
-          ia.push_back(rowC); ja.push_back(colB+1); ar.push_back(cf * hrs);
+          double cf = CF[idx_cf(r,e,s,h0,E,S,H)];
+          int rowC  = ROW_CAP0 + ((r*E + e)*T + tau);
+          int colG  = base + col_gen_e_tau(E, e, tau, T);
+          int colB  = base + col_build_e(e);
+          Tpls.push_back({rowC, colG, -1.0});
+          if (cf!=0.0 && hrs!=0.0)
+            Tpls.push_back({rowC, colB, cf * hrs});
         }
 
-        // Reserve rows: Sum_e (cf*hrs*Build[r,e]) >= RHS  (if used)
+        // Reserve rows
         if (useReserve){
-          int rowR = ROW_RSV0 + r*T + tau + 1;
+          int rowR = ROW_RSV0 + r*T + tau;
           for (int e=0; e<E; ++e){
-            double cf = CF[idx_cf(r,e,s,h,E,S,H)];
-            int colB = base + col_build_e(e);
-            ia.push_back(rowR); ja.push_back(colB+1); ar.push_back(cf * hrs);
+            double cf = CF[idx_cf(r,e,s,h0,E,S,H)];
+            if (cf!=0.0 && hrs!=0.0){
+              int colB = base + col_build_e(e);
+              Tpls.push_back({rowR, colB, cf * hrs});
+            }
           }
         }
 
-        // CES row: Sum_{r,e,tau} q[e]*Gen[r,e,tau] >= CES_rhs
+        // CES row
         if (useCES){
-          int rowC = ROW_CES + 1;
+          int rowC = ROW_CES;
           for (int e=0; e<E; ++e){
             double q = CES_q[e];
-            if (q != 0.0){
+            if (q!=0.0){
               int colG = base + col_gen_e_tau(E, e, tau, T);
-              ia.push_back(rowC); ja.push_back(colG+1); ar.push_back(q);
+              Tpls.push_back({rowC, colG, q});
             }
           }
         }
       }
-    }
   }
 
-  glp_load_matrix(lp, (int)ia.size()-1, ia.data(), ja.data(), ar.data());
+  // Convert to CSC for HiGHS
+  std::vector<int> astart_i; std::vector<int> aindex_i; std::vector<double> avalue;
+  triplets_to_csc(rowCount, g_N, Tpls, astart_i, aindex_i, avalue);
 
-  g_lastCode = glp_simplex(lp, nullptr);
-  if (g_lastCode == 0){
-    g_status = glp_get_status(lp);
-    g_obj    = glp_get_obj_val(lp);
+  // HiGHS expects HighsInt for starts/indices
+  std::vector<HighsInt> astart(astart_i.begin(), astart_i.end());
+  std::vector<HighsInt> aindex(aindex_i.begin(), aindex_i.end());
+  const HighsInt nnz = (HighsInt)avalue.size();
 
-    // Extract solution
-    for (int j=0; j<g_N; ++j) g_solution[j] = glp_get_col_prim(lp, j+1);
-    g_solved = (g_status == GLP_OPT || g_status == GLP_FEAS);
+  // ---- HiGHS solve ----
+  void* h = Highs_create();
 
-    // Per-region costs
-    std::fill(g_cost_cap.begin(),    g_cost_cap.end(),    0.0);
-    std::fill(g_cost_energy.begin(), g_cost_energy.end(), 0.0);
+  // 15-arg signature:
+  // Highs_passLp(h, num_col, num_row, num_nz, a_format, sense, offset,
+  //   col_cost, col_lower, col_upper, row_lower, row_upper,
+  //   a_start, a_index, a_value);
+  const HighsInt a_format = 1;  // 1 = column-wise (CSC)
+  const HighsInt sense    = 1;  // 1 = minimize
+  const double   offset   = 0.0;
 
-    for (int r=0; r<R; ++r){
-      int base = r * g_colsPerReg;
+  g_lastCode = Highs_passLp(
+    h,
+    (HighsInt)g_N, (HighsInt)rowCount, nnz,
+    a_format, sense, offset,
+    col_cost.data(), col_lo.data(), col_hi.data(),
+    row_lo.data(), row_hi.data(),
+    astart.data(), aindex.data(), avalue.data()
+  );
 
-      // Capacity part
-      for (int e=0; e<E; ++e){
-        int colB = base + col_build_e(e);
-        double build = g_solution[colB];
-        g_cost_cap[r] += (CAPEX[e] + FOM[e]) * build;
-      }
-      // Energy part
-      for (int e=0; e<E; ++e){
-        double varc = Fuel[e] + VOM[e];
-        for (int tau=0; tau<T; ++tau){
-          int colG = base + col_gen_e_tau(E, e, tau, T);
-          g_cost_energy[r] += varc * g_solution[colG];
+  if (g_lastCode==0) g_lastCode = Highs_run(h);  // 0 = ok
+
+  int ms = -1;
+  if (g_lastCode==0) ms = Highs_getModelStatus(h);
+
+  g_status = ms;
+  g_obj    = 1e308;
+  g_solved = false;
+
+  if (g_lastCode==0){
+    double obj = Highs_getObjectiveValue(h);
+
+    std::vector<double> col_val(g_N, 0.0), col_dual(g_N,0.0);
+    std::vector<double> row_val(std::max(1,rowCount), 0.0), row_dual(std::max(1,rowCount), 0.0);
+    int sol_rc = Highs_getSolution(h, col_val.data(), col_dual.data(), row_val.data(), row_dual.data());
+    if (sol_rc==0) {
+      g_solution = std::move(col_val);
+      // Cost breakout (by region)
+      for (int r=0; r<g_R; ++r){
+        double cc=0.0, ce=0.0;
+        int base = r * g_colsPerReg;
+        for (int e=0; e<g_E; ++e){
+          int colB = base + col_build_e(e);
+          cc += (CAPEX[e] + FOM[e]) * g_solution[colB];
+          double varc = Fuel[e] + VOM[e];
+          for (int tau=0; tau<g_T; ++tau){
+            int colG = base + col_gen_e_tau(g_E, e, tau, g_T);
+            ce += varc * g_solution[colG];
+          }
         }
+        if ((int)g_cost_cap.size()!=g_R) g_cost_cap.assign(g_R,0.0);
+        if ((int)g_cost_energy.size()!=g_R) g_cost_energy.assign(g_R,0.0);
+        g_cost_cap[r]    = cc;
+        g_cost_energy[r] = ce;
       }
+      g_obj    = obj;
+      g_solved = std::isfinite(g_obj);
     }
   }
 
-  glp_delete_prob(lp);
+  Highs_destroy(h);
   return g_solved ? g_obj : 1e308;
 }
 
@@ -368,14 +380,14 @@ extern "C" __declspec(dllexport) int VEFCC user_definition(
       *func_index = F_SOLVE;
       return 1;
 
-    case 1: *sym=(char*)"LP_CAP_ADD";   *arglist=(char*)" region_pos , tech_pos ";                   *num_args=2; *num_vector=0; *func_index=F_CAP_ADD; return 1;
-    case 2: *sym=(char*)"LP_GEN";       *arglist=(char*)" region_pos , tech_pos , ts_pos , hr_pos ";  *num_args=4; *num_vector=0; *func_index=F_GEN;     return 1;
-    case 3: *sym=(char*)"LP_COST_CAP";  *arglist=(char*)" region_pos ";                               *num_args=1; *num_vector=0; *func_index=F_COST_CAP;return 1;
-    case 4: *sym=(char*)"LP_COST_ENERGY";*arglist=(char*)" region_pos ";                              *num_args=1; *num_vector=0; *func_index=F_COST_EN; return 1;
+    case 1: *sym=(char*)"LP_CAP_ADD";     *arglist=(char*)" region_pos , tech_pos ";                  *num_args=2; *num_vector=0; *func_index=F_CAP_ADD; return 1;
+    case 2: *sym=(char*)"LP_GEN";         *arglist=(char*)" region_pos , tech_pos , ts_pos , hr_pos "; *num_args=4; *num_vector=0; *func_index=F_GEN;     return 1;
+    case 3: *sym=(char*)"LP_COST_CAP";    *arglist=(char*)" region_pos ";                              *num_args=1; *num_vector=0; *func_index=F_COST_CAP; return 1;
+    case 4: *sym=(char*)"LP_COST_ENERGY"; *arglist=(char*)" region_pos ";                              *num_args=1; *num_vector=0; *func_index=F_COST_EN;  return 1;
 
-    case 5: *sym=(char*)"LP_OBJ";       *arglist=(char*)""; *num_args=0; *num_vector=0; *func_index=F_LP_OBJ;    return 1;
-    case 6: *sym=(char*)"LP_STATUS";    *arglist=(char*)""; *num_args=0; *num_vector=0; *func_index=F_LP_STATUS; return 1;
-    case 7: *sym=(char*)"LP_CODE";      *arglist=(char*)""; *num_args=0; *num_vector=0; *func_index=F_LP_CODE;   return 1;
+    case 5: *sym=(char*)"LP_OBJ";         *arglist=(char*)""; *num_args=0; *num_vector=0; *func_index=F_LP_OBJ;    return 1;
+    case 6: *sym=(char*)"LP_STATUS";      *arglist=(char*)""; *num_args=0; *num_vector=0; *func_index=F_LP_STATUS; return 1;
+    case 7: *sym=(char*)"LP_CODE";        *arglist=(char*)""; *num_args=0; *num_vector=0; *func_index=F_LP_CODE;   return 1;
 
     default: return 0;
   }
