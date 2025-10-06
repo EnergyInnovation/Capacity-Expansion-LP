@@ -9,6 +9,8 @@ LP Solution=
 	  Fuel Cost per Unit Output[hard coal es],
 	  VOM[hard coal es],
 	  Last Year Installed Capacity[Region1,hard coal es],
+	  Max Buildable Capacity This Year[Region1,hard coal es],
+	  Max Technical Capacity[Region1,hard coal es],
 	  CES Qualifying Technologies[hard coal es],
 	  RPS Qualifying Technologies[hard coal es],
 	  CES RHS,
@@ -24,6 +26,16 @@ LP Solution=
 	~	
 	~		|
 
+Max Buildable Capacity This Year[Region, electricity source]=
+	MAX(5000,Last Year Installed Capacity[Region,electricity source]*0.3)
+	~	
+	~		|
+
+Max Technical Capacity[Region, electricity source]=
+	1e+09
+	~	
+	~		|
+
 RPS RHS=
 	SUM(RPS Target*Demand Across Timeslice[Region!,timeslice!,hours of day!])
 	~	
@@ -35,7 +47,7 @@ CES RHS=
 	~		|
 
 RPS ACP=
-	0
+	100
 	~	$/(MW*hr)
 	~		|
 
@@ -58,12 +70,12 @@ RPS Qualifying Technologies[RPS electricity source]=
 	~		|
 
 CES ACP=
-	0
+	100
 	~	$/(MW*hr)
 	~		|
 
 RPS Target=
-	0.5
+	0.4
 	~	
 	~		|
 
@@ -862,12 +874,16 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,120,0
 1,97,17,27,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,98,17,90,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,99,94,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,100,Max Technical Capacity,856,868,53,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,101,Max Buildable Capacity This Year,1005,874,69,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,102,42,101,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,103,100,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,104,101,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 ///---\\\
 :L<%^E!@
 1:current.vdfx
 4:Time
-5:CES Target
-6:average winter
+5:RPS Target
 6:biomass
 6:biomass es
 6:biomass w CCS es
@@ -881,6 +897,29 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,120,0
 6:heavy fuel oil
 6:heavy or residual fuel oil es
 6:Hour0
+6:Hour1
+6:Hour10
+6:Hour11
+6:Hour12
+6:Hour13
+6:Hour14
+6:Hour15
+6:Hour16
+6:Hour17
+6:Hour18
+6:Hour19
+6:Hour2
+6:Hour20
+6:Hour21
+6:Hour22
+6:Hour23
+6:Hour3
+6:Hour4
+6:Hour5
+6:Hour6
+6:Hour7
+6:Hour8
+6:Hour9
 6:hydro es
 6:hydrogen
 6:hydrogen combined cycle es
@@ -897,6 +936,7 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,120,0
 6:nuclear es
 6:offshore wind es
 6:onshore wind es
+6:peak summer
 6:petroleum es
 6:Region1
 6:small modular reactor es

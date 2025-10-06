@@ -6,10 +6,10 @@
 //   del /q lp_vensim_addon.obj lp_vensim_addon.lib lp_vensim_addon.exp lp_vensim_addon.dll
 //   cl /nologo /LD /O2 /EHsc /MT ^
 //     "lp_vensim_addon.cpp" ^
-//     /I "C:\\vcpkg\\installed\\x64-windows-static\\include" ^
-//     /I "C:\\vcpkg\\installed\\x64-windows-static\\include\\highs" ^
+//     /I "C:\vcpkg\installed\x64-windows-static\include" ^
+//     /I "C:\vcpkg\installed\x64-windows-static\include\highs" ^
 //     /link /NOLOGO ^
-//     /LIBPATH:"C:\\vcpkg\\installed\\x64-windows-static\\lib" highs.lib zlib.lib ^
+//     /LIBPATH:"C:\vcpkg\installed\x64-windows-static\lib" highs.lib zlib.lib ^
 //     /OUT:"lp_vensim_addon.dll"
 // If you get LNK2038 CRT mismatch, switch /MT -> /MD to match highs.lib.
 
@@ -128,6 +128,9 @@ static double solve_global_policies(
   const double* Fuel,              // [E]
   const double* VOM,               // [E]
   const double* ExistingCap,       // [R,E]
+  // NEW: per-(region,tech) capacity limits
+  const double* MaxBuild,          // [R,E] (≤0 to ignore per-year build cap)
+  const double* CapMax,            // [R,E] (≤0 to ignore per-region TOTAL installed cap)
   // CES
   const double* CES_q,             // [E] weights
   double CES_rhs,                  // scalar MWh (>=0 to enable hard CES)
@@ -172,11 +175,24 @@ static double solve_global_policies(
   // Region-scoped variables
   for (int r=0; r<R; ++r){
     int base = r * g_colsPerReg;
-    // Build vars
+    // Build vars (apply per-(r,e) upper bounds)
     for (int e=0; e<E; ++e){
       int col = base + col_build_e(e);
       col_cost[col] = CAPEX[e] + FOM[e];
-      col_lo[col]   = 0.0; col_hi[col] = INF;
+      col_lo[col]   = 0.0;
+      double ub = INF;
+      if (MaxBuild){
+        double mb = MaxBuild[idx_xcap(r,e,E)];
+        if (mb > 0.0) ub = std::min(ub, mb);
+      }
+      if (CapMax){
+        double cm = CapMax[idx_xcap(r,e,E)];
+        if (cm > 0.0){
+          double exist = ExistingCap[idx_xcap(r,e,E)];
+          ub = std::min(ub, std::max(0.0, cm - exist));
+        }
+      }
+      col_hi[col] = ub;
     }
     // Gen vars
     for (int e=0; e<E; ++e){
@@ -430,9 +446,9 @@ extern "C" __declspec(dllexport) int VEFCC user_definition(
     case 0:
       *sym        = (char*)"LP_Solve";
       // Vectors first (10): Demand, CF, Hours, CAPEX, FOM, Fuel, VOM, ExistingCap, CES_q, RPS_q
-      *arglist    = (char*)"{Demand},{Capacity_factor},{Hours},{CAPEX},{FOM},{Fuel},{VOM},{ExistingCap},{CES_qualifying},{RPS_qualifying},CES_rhs,CES_ACP,RPS_rhs,RPS_ACP,ReserveMargin,R,S,H,E";
-      *num_args   = 19;
-      *num_vector = 10;
+      *arglist    = (char*)"{Demand},{Capacity_factor},{Hours},{CAPEX},{FOM},{Fuel},{VOM},{ExistingCap},{MaxBuild},{CapMax},{CES_qualifying},{RPS_qualifying},CES_rhs,CES_ACP,RPS_rhs,RPS_ACP,ReserveMargin,R,S,H,E";
+      *num_args   = 21;
+      *num_vector = 12;
       *func_index = F_SOLVE;
       return 1;
 
@@ -455,7 +471,7 @@ extern "C" __declspec(dllexport) int VEFCC vensim_external(VV* val, int nval, in
   switch (funcid){
 
     case F_SOLVE: {
-      if (nval < 19) { val[0].val = 1e308; return 0; }
+      if (nval < 21) { val[0].val = 1e308; return 0; }
 
       const double* Dem    = val[0].vec->firstval; // [R,S,H]
       const double* CF     = val[1].vec->firstval; // [R,E,S,H]
@@ -464,24 +480,27 @@ extern "C" __declspec(dllexport) int VEFCC vensim_external(VV* val, int nval, in
       const double* FOM    = val[4].vec->firstval; // [E]
       const double* Fuel   = val[5].vec->firstval; // [E]
       const double* VOM    = val[6].vec->firstval; // [E]
-      const double* XCap   = val[7].vec->firstval; // [R,E]
+      const double* XCap    = val[7].vec->firstval; // [R,E]
+      const double* MaxB   = val[8].vec->firstval; // [R,E]
+      const double* CapMx  = val[9].vec->firstval; // [R,E]
 
-      const double* CES_q  = val[8].vec->firstval;  // [E]
-      const double* RPS_q  = val[9].vec->firstval;  // [E]
+      const double* CES_q  = val[10].vec->firstval;  // [E]
+      const double* RPS_q  = val[11].vec->firstval;  // [E]
 
-      double CES_rhs       = val[10].val;  // MWh
-      double CES_ACP       = val[11].val;  // $/MWh
-      double RPS_rhs       = val[12].val;  // MWh
-      double RPS_ACP       = val[13].val;  // $/MWh
+      double CES_rhs       = val[12].val;  // MWh
+      double CES_ACP       = val[13].val;  // $/MWh
+      double RPS_rhs       = val[14].val;  // MWh
+      double RPS_ACP       = val[15].val;  // $/MWh  // $/MWh
 
-      double ReserveMargin = val[14].val;
-      int R = (int)(val[15].val + 0.5);
-      int S = (int)(val[16].val + 0.5);
-      int H = (int)(val[17].val + 0.5);
-      int E = (int)(val[18].val + 0.5);
+      double ReserveMargin = val[16].val;
+      int R = (int)(val[17].val + 0.5);
+      int S = (int)(val[18].val + 0.5);
+      int H = (int)(val[19].val + 0.5);
+      int E = (int)(val[20].val + 0.5);
 
       val[0].val = solve_global_policies(
         Dem, CF, Hours, CAPEX, FOM, Fuel, VOM, XCap,
+        MaxB, CapMx,
         CES_q, CES_rhs, CES_ACP,
         RPS_q, RPS_rhs, RPS_ACP,
         ReserveMargin, R,S,H,E
