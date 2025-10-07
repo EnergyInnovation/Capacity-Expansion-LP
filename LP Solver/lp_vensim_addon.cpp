@@ -1,11 +1,13 @@
-// lp_vensim_addon.cpp — HiGHS C API (multi-scenario only API)
+// lp_vensim_addon.cpp — HiGHS C API (multi-scenario-only API)
 // Features:
 //  - Region-first layout
 //  - Capacity build + dispatch with reserve constraint
 //  - CES / RPS rows with optional ACP (slacks priced at CES_ACP / RPS_ACP)
 //  - Per-(region,tech) build caps (MaxBuild[R,E]) and installed caps (CapMax[R,E])
-//  - Inter-regional trading via pairwise directional flows Flow[r->d,τ] with caps TransRR[R,R]
-//  - Multi-scenario snapshots: ALL getters take scenario_id; no global (last-solve) getters
+//  - Inter-regional trading via directional flows Flow[r->d,τ] with caps TransRR[R,R]
+//    * TransRR[r,d] <= 0  ⇒ no line r→d (disabled).
+//    * If all pairs <= 0  ⇒ omit trading block entirely for speed.
+//  - Multi-scenario snapshots: ALL getters take scenario_id; no global (last-solve) getters.
 //
 // Build (x64 Native Tools for VS):
 //   del /q lp_vensim_addon.obj lp_vensim_addon.lib lp_vensim_addon.exp lp_vensim_addon.dll
@@ -16,7 +18,7 @@
 //     /link /NOLOGO ^
 //     /LIBPATH:"C:\\vcpkg\\installed\\x64-windows-static\\lib" highs.lib zlib.lib ^
 //     /OUT:"lp_vensim_addon.dll"
-// If you hit CRT mismatch, swap /MT -> /MD to match your highs.lib.
+// If you hit CRT mismatch, swap /MT -> /MD and use the matching vcpkg triplet paths.
 
 #define NOMINMAX
 #include <windows.h>
@@ -65,12 +67,14 @@ static int                 g_lastCode = -999;
 static double              g_obj      = 0.0;
 static bool                g_solved   = false;
 
-static int g_R=0, g_S=0, g_H=0, g_E=0;
-static int g_T=0, g_colsPerReg=0, g_N_region=0, g_N_total=0;
-static int g_colSlackCES=-1, g_colSlackRPS=-1;
+static int  g_R=0, g_S=0, g_H=0, g_E=0;
+static int  g_T=0, g_colsPerReg=0, g_N_region=0, g_N_total=0;
+static int  g_colSlackCES=-1, g_colSlackRPS=-1;
+static bool g_haveTrade=false;
 
 static inline void reset_cache(int R,int E,int T,bool haveCESslack,bool haveRPSslack,bool haveTrade){
-  g_colsPerReg = E*(T+1) + (haveTrade ? (R-1)*T : 0);
+  g_haveTrade = haveTrade;
+  g_colsPerReg = E*(T+1) + (g_haveTrade ? (R-1)*T : 0);
   g_N_region   = R*g_colsPerReg;
   g_N_total    = g_N_region + (haveCESslack?1:0) + (haveRPSslack?1:0);
   g_solution.assign(g_N_total,0.0);
@@ -87,6 +91,7 @@ static inline void reset_cache(int R,int E,int T,bool haveCESslack,bool haveRPSs
 struct Context{
   int R=0,S=0,H=0,E=0,T=0, colsPerReg=0,N_region=0,N_total=0;
   int colSlackCES=-1,colSlackRPS=-1;
+  bool haveTrade=false;
   vector<double> solution, cost_cap, cost_energy;
   int status=-1,lastCode=-999;
   double obj=1e308;
@@ -99,6 +104,7 @@ static inline void save_context(int sid){
   c.R=g_R; c.S=g_S; c.H=g_H; c.E=g_E; c.T=g_T;
   c.colsPerReg=g_colsPerReg; c.N_region=g_N_region; c.N_total=g_N_total;
   c.colSlackCES=g_colSlackCES; c.colSlackRPS=g_colSlackRPS;
+  c.haveTrade=g_haveTrade;
   c.solution=g_solution; c.cost_cap=g_cost_cap; c.cost_energy=g_cost_energy;
   c.status=g_status; c.lastCode=g_lastCode; c.obj=g_obj; c.solved=g_solved;
   g_ctx[sid]=std::move(c);
@@ -157,13 +163,25 @@ static double solve_global_policies(
   double ReserveMargin, int R,int S,int H,int E
 ){
   const int T=S*H;
+
+  // Transmission: allow[r,d] = 1 only if cap>0, else 0. If no pair allowed, disable trading entirely.
+  bool anyTrade=false;
+  vector<char> allow; allow.assign(R*R, 0);
+  if (TransRR){
+    for (int r=0;r<R;++r) for (int d=0; d<R; ++d){
+      if (r==d) continue;
+      const double cap = TransRR[r*R + d];
+      if (cap > 0.0) { allow[r*R + d] = 1; anyTrade=true; }
+    }
+  }
   const bool useCES=(CES_rhs>0.0)||(CES_ACP>0.0);
   const bool addCES=(CES_ACP>0.0);
   const bool useRPS=(RPS_rhs>0.0)||(RPS_ACP>0.0);
   const bool addRPS=(RPS_ACP>0.0);
-  const bool haveTrade=true;
+  const bool haveTrade = anyTrade;
 
-  reset_cache(R,E,T,addCES,addRPS,haveTrade); g_S=S; g_H=H;
+  reset_cache(R,E,T, addCES, addRPS, haveTrade);
+  g_S=S; g_H=H;
 
   // Rows
   const int ROW_DEM0=0;                 // R*T
@@ -207,18 +225,19 @@ static double solve_global_policies(
         col_cost[c]=vc; col_lo[c]=0.0; col_hi[c]=INF;
       }
     }
-    // Flow vars
-    for(int d=0; d<R; ++d){
-      if(d==r) continue;
-      for(int tau=0;tau<T;++tau){
-        int c=base+col_flow_od_tau(E,T,R,r,d,tau);
-        col_cost[c]=0.0; col_lo[c]=0.0;
-        double ub=INF;
-        if(TransRR){
-          double cap=TransRR[r*R+d];
-          if(cap>0.0) ub=cap;
+    // Flow vars (only if haveTrade)
+    if (haveTrade){
+      for (int d=0; d<R; ++d){
+        if (d==r) continue;
+        const bool ok = allow[r*R + d];
+        for (int tau=0; tau<T; ++tau){
+          const int c = base + col_flow_od_tau(E,T,R, r,d,tau);
+          col_cost[c] = 0.0;
+          col_lo[c]   = 0.0;
+          double ub   = 0.0;                 // default disabled
+          if (ok) ub = TransRR[r*R + d];     // positive cap
+          col_hi[c] = ub;
         }
-        col_hi[c]=ub;
       }
     }
   }
@@ -280,7 +299,7 @@ static double solve_global_policies(
     + (useCES? (size_t)R*E*T + (g_colSlackCES>=0?1:0) : 0)
     + (useRPS? (size_t)R*E*T + (g_colSlackRPS>=0?1:0) : 0)
     + (size_t)R*T*E
-    + (size_t)R*(R-1)*T*2
+    + (haveTrade? (size_t)R*(R-1)*T*2 : 0)
   );
 
   for(int r=0;r<R;++r){
@@ -290,16 +309,27 @@ static double solve_global_policies(
         int tau=s*H+h0; double hrs=Hours[idx_hours(s,h0,H)];
 
         // Demand row: sum Gen + inflows - outflows = Demand
-        int rowD=ROW_DEM0+r*T+tau;
+        const int rowD=ROW_DEM0+r*T+tau;
+        // generation
         for(int e0=0;e0<E;++e0){
           int c=base+col_gen_e_tau(E,e0,tau,T); Tpls.push_back({rowD,c,1.0});
         }
-        for(int d=0; d<R; ++d){ if(d==r) continue;
-          int base_d=d*g_colsPerReg; int cIn=base_d+col_flow_od_tau(E,T,R,d,r,tau);
-          Tpls.push_back({rowD,cIn,1.0});
-        }
-        for(int d=0; d<R; ++d){ if(d==r) continue;
-          int cOut=base+col_flow_od_tau(E,T,R,r,d,tau); Tpls.push_back({rowD,cOut,-1.0});
+        // inflows
+        if (haveTrade){
+          for (int o=0; o<R; ++o){
+            if (o==r) continue;
+            if (!allow[o*R + r]) continue;               // skip disabled
+            const int base_o = o * g_colsPerReg;         // origin o
+            const int cIn    = base_o + col_flow_od_tau(E,T,R, o,r,tau);
+            Tpls.push_back({rowD, cIn, 1.0});
+          }
+          // outflows
+          for (int d=0; d<R; ++d){
+            if (d==r) continue;
+            if (!allow[r*R + d]) continue;               // skip disabled
+            const int cOut = base + col_flow_od_tau(E,T,R, r,d,tau);
+            Tpls.push_back({rowD, cOut, -1.0});
+          }
         }
 
         // Capacity rows per (r,e)
@@ -554,13 +584,14 @@ extern "C" __declspec(dllexport) int VEFCC vensim_external(VV* val, int nval, in
       int r=(int)(val[0].val+0.5), ts=(int)(val[1].val+0.5), hr=(int)(val[2].val+0.5), sid=(int)(val[3].val+0.5);
       const Context* c=get_ctx(sid);
       if(!c||!c->solved||r<1||r>c->R||ts<1||ts>c->S||hr<1||hr>c->H){ val[0].val=1e308; return 1; }
+      if(!c->haveTrade){ val[0].val=0.0; return 1; }
       int r0=r-1, tau=(ts-1)*c->H+(hr-1);
       double sum=0.0;
       int base_r = r0 * c->colsPerReg;
       for(int d0=0; d0<c->R; ++d0){
         if(d0==r0) continue;
         int col = base_r + col_flow_od_tau(c->E,c->T,c->R, r0,d0,tau);
-        sum += c->solution[col];
+        if (col < (int)c->solution.size()) sum += c->solution[col];
       }
       val[0].val = sum; return 1;
     }
@@ -570,13 +601,14 @@ extern "C" __declspec(dllexport) int VEFCC vensim_external(VV* val, int nval, in
       int r=(int)(val[0].val+0.5), ts=(int)(val[1].val+0.5), hr=(int)(val[2].val+0.5), sid=(int)(val[3].val+0.5);
       const Context* c=get_ctx(sid);
       if(!c||!c->solved||r<1||r>c->R||ts<1||ts>c->S||hr<1||hr>c->H){ val[0].val=1e308; return 1; }
+      if(!c->haveTrade){ val[0].val=0.0; return 1; }
       int r0=r-1, tau=(ts-1)*c->H+(hr-1);
       double sum=0.0;
       for(int o0=0; o0<c->R; ++o0){
         if(o0==r0) continue;
         int base_o = o0 * c->colsPerReg;
         int col = base_o + col_flow_od_tau(c->E,c->T,c->R, o0,r0,tau);
-        sum += c->solution[col];
+        if (col < (int)c->solution.size()) sum += c->solution[col];
       }
       val[0].val = sum; return 1;
     }
@@ -586,10 +618,12 @@ extern "C" __declspec(dllexport) int VEFCC vensim_external(VV* val, int nval, in
       int o=(int)(val[0].val+0.5), d=(int)(val[1].val+0.5), ts=(int)(val[2].val+0.5), hr=(int)(val[3].val+0.5), sid=(int)(val[4].val+0.5);
       const Context* c=get_ctx(sid);
       if(!c||!c->solved||o<1||o>c->R||d<1||d>c->R||o==d||ts<1||ts>c->S||hr<1||hr>c->H){ val[0].val=1e308; return 1; }
+      if(!c->haveTrade){ val[0].val=0.0; return 1; }
       int o0=o-1, d0=d-1, tau=(ts-1)*c->H+(hr-1);
       int base_o = o0 * c->colsPerReg;
       int col = base_o + col_flow_od_tau(c->E,c->T,c->R, o0,d0,tau);
-      val[0].val = c->solution[col]; return 1;
+      if (col < (int)c->solution.size()) val[0].val = c->solution[col]; else val[0].val=0.0;
+      return 1;
     }
 
     default: return 0;
