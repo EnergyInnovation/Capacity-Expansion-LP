@@ -1,15 +1,20 @@
 // lp_vensim_addon.cpp — HiGHS C API (15-arg Highs_passLp)
-// Adds RPS ACP (soft constraint via slack) and reorders LP_Solve so CES block then RPS block.
-// Region-first layout; per-hour reserve; per-region cost breakout; Vensim version stays 62051.
+// Features:
+//  - Region-first layout
+//  - Capacity build + dispatch with reserve constraint
+//  - CES / RPS rows with optional ACP (slacks priced at CES_ACP / RPS_ACP)
+//  - Per-(region,tech) build caps (MaxBuild[R,E]) and installed caps (CapMax[R,E])
+//  - Inter-regional trading via pairwise directional flows Flow[r->d,τ] with caps TransRR[R,R]
+//  - Per-region cost breakout helpers
 //
 // Build (x64 Native Tools for VS):
 //   del /q lp_vensim_addon.obj lp_vensim_addon.lib lp_vensim_addon.exp lp_vensim_addon.dll
 //   cl /nologo /LD /O2 /EHsc /MT ^
 //     "lp_vensim_addon.cpp" ^
-//     /I "C:\vcpkg\installed\x64-windows-static\include" ^
-//     /I "C:\vcpkg\installed\x64-windows-static\include\highs" ^
+//     /I "C:\\vcpkg\\installed\\x64-windows-static\\include" ^
+//     /I "C:\\vcpkg\\installed\\x64-windows-static\\include\\highs" ^
 //     /link /NOLOGO ^
-//     /LIBPATH:"C:\vcpkg\installed\x64-windows-static\lib" highs.lib zlib.lib ^
+//     /LIBPATH:"C:\\vcpkg\\installed\\x64-windows-static\\lib" highs.lib zlib.lib ^
 //     /OUT:"lp_vensim_addon.dll"
 // If you get LNK2038 CRT mismatch, switch /MT -> /MD to match highs.lib.
 
@@ -65,9 +70,10 @@ static int g_T=0, g_colsPerReg=0, g_N_region=0, g_N_total=0;
 static int g_colSlackCES = -1;
 static int g_colSlackRPS = -1;
 
-static inline void reset_cache(int R=0,int E=0,int T=0, bool haveCESslack=false, bool haveRPSslack=false){
-  g_colsPerReg = (E>0 ? E*(T+1) : 0);           // E build + E*T gen
-  g_N_region   = (R>0 ? R*g_colsPerReg : 0);    // region-scoped variables
+static inline void reset_cache(int R=0,int E=0,int T=0, bool haveCESslack=false, bool haveRPSslack=false, bool haveTrade=false){
+  // Per-region columns: E build + E*T gen + (R-1)*T flows (if trading)
+  g_colsPerReg = (E>0 ? E*(T+1) + (haveTrade ? (R-1)*T : 0) : 0);
+  g_N_region   = (R>0 ? R*g_colsPerReg : 0);
   int extra    = (haveCESslack?1:0) + (haveRPSslack?1:0);
   g_N_total    = g_N_region + extra;
 
@@ -93,6 +99,15 @@ static inline int idx_xcap(int r,int e,int E){ return r*E + e; }                
 static inline int col_build_e(int e) { return e; } // 0..E-1
 static inline int col_gen_e_tau(int E, int e, int tau, int T){ return E + e*T + tau; } // 0..E*T-1
 
+// Trading columns: origin r block contains flows to all d!=r
+static inline int offset_trade(int E, int T){ return E*(T+1); }
+static inline int dest_idx_for_origin(int r, int d){ return (d < r) ? d : (d - 1); } // 0..R-2
+static inline int col_flow_od_tau(int E, int T, int R, int r, int d, int tau){
+  // r = origin region for this block
+  const int k = dest_idx_for_origin(r, d); // exclude self
+  return offset_trade(E,T) + k*T + tau;
+}
+
 // ---------- Triplet -> CSC ----------
 struct Triplet { int row; int col; double val; };
 
@@ -117,7 +132,7 @@ static void triplets_to_csc(
   }
 }
 
-// ---------- Core solver (HiGHS C API: 15-arg Highs_passLp) ----------
+// ---------- Core solver ----------
 static double solve_global_policies(
   // Data (Region-first)
   const double* Demand,            // [R,S,H]
@@ -128,19 +143,21 @@ static double solve_global_policies(
   const double* Fuel,              // [E]
   const double* VOM,               // [E]
   const double* ExistingCap,       // [R,E]
-  // NEW: per-(region,tech) capacity limits
-  const double* MaxBuild,          // [R,E] (≤0 to ignore per-year build cap)
-  const double* CapMax,            // [R,E] (≤0 to ignore per-region TOTAL installed cap)
+  // Per-(r,e) caps
+  const double* MaxBuild,          // [R,E] (<=0 ignore)
+  const double* CapMax,            // [R,E] (<=0 ignore)
+  // Pairwise transmission caps (per τ)
+  const double* TransRR,           // [R,R] (<=0 uncapped; diagonal ignored)
   // CES
-  const double* CES_q,             // [E] weights
-  double CES_rhs,                  // scalar MWh (>=0 to enable hard CES)
-  double CES_ACP,                  // scalar $/MWh (>=0 enables ACP slack)
+  const double* CES_q,             // [E]
+  double CES_rhs,                  // MWh
+  double CES_ACP,                  // $/MWh
   // RPS
-  const double* RPS_q,             // [E] weights
-  double RPS_rhs,                  // scalar MWh (>=0 to enable hard RPS)
-  double RPS_ACP,                  // scalar $/MWh (>=0 enables ACP slack)
+  const double* RPS_q,             // [E]
+  double RPS_rhs,                  // MWh
+  double RPS_ACP,                  // $/MWh
   // System
-  double ReserveMargin,            // scalar (e.g., 0.15)
+  double ReserveMargin,            // fraction (e.g., 0.15)
   int R, int S, int H, int E
 ){
   const int T = S*H;
@@ -151,7 +168,9 @@ static double solve_global_policies(
   const bool useRPSrow   = (RPS_rhs > 0.0) || (RPS_ACP > 0.0);
   const bool addRPSSlack = (RPS_ACP > 0.0);
 
-  reset_cache(R,E,T, addCESSlack, addRPSSlack);
+  const bool haveTrade   = true; // always enable flows; bounds may be ∞
+
+  reset_cache(R,E,T, addCESSlack, addRPSSlack, haveTrade);
   g_S = S; g_H = H;
 
   // Row indexing
@@ -174,33 +193,50 @@ static double solve_global_policies(
 
   // Region-scoped variables
   for (int r=0; r<R; ++r){
-    int base = r * g_colsPerReg;
+    const int base = r * g_colsPerReg;
+
     // Build vars (apply per-(r,e) upper bounds)
-    for (int e=0; e<E; ++e){
-      int col = base + col_build_e(e);
-      col_cost[col] = CAPEX[e] + FOM[e];
+    for (int e0=0; e0<E; ++e0){
+      const int col = base + col_build_e(e0);
+      col_cost[col] = CAPEX[e0] + FOM[e0];
       col_lo[col]   = 0.0;
       double ub = INF;
       if (MaxBuild){
-        double mb = MaxBuild[idx_xcap(r,e,E)];
+        const double mb = MaxBuild[idx_xcap(r,e0,E)];
         if (mb > 0.0) ub = std::min(ub, mb);
       }
       if (CapMax){
-        double cm = CapMax[idx_xcap(r,e,E)];
+        const double cm = CapMax[idx_xcap(r,e0,E)];
         if (cm > 0.0){
-          double exist = ExistingCap[idx_xcap(r,e,E)];
+          const double exist = ExistingCap[idx_xcap(r,e0,E)];
           ub = std::min(ub, std::max(0.0, cm - exist));
         }
       }
       col_hi[col] = ub;
     }
+
     // Gen vars
-    for (int e=0; e<E; ++e){
-      double c_e = Fuel[e] + VOM[e];
+    for (int e0=0; e0<E; ++e0){
+      const double c_e = Fuel[e0] + VOM[e0];
       for (int tau=0; tau<T; ++tau){
-        int col = base + col_gen_e_tau(E, e, tau, T);
+        const int col = base + col_gen_e_tau(E, e0, tau, T);
         col_cost[col] = c_e;
         col_lo[col]   = 0.0; col_hi[col] = INF;
+      }
+    }
+
+    // Flow vars: for each destination d != r and each tau
+    for (int d=0; d<R; ++d){ if (d==r) continue; 
+      for (int tau=0; tau<T; ++tau){
+        const int colF = base + col_flow_od_tau(E,T,R, r, d, tau);
+        col_cost[colF] = 0.0; // can add wheeling cost later
+        col_lo[colF]   = 0.0;
+        double ub = INF;
+        if (TransRR){
+          const double cap = TransRR[r*R + d]; // region-first [R,R]
+          if (cap > 0.0) ub = cap;
+        }
+        col_hi[colF] = ub;
       }
     }
   }
@@ -216,39 +252,39 @@ static double solve_global_policies(
   for (int r=0; r<R; ++r)
     for (int s=0; s<S; ++s)
       for (int h0=0; h0<H; ++h0){
-        int tau = s*H + h0;
-        int row = ROW_DEM0 + r*T + tau;
-        double rhs = Demand[idx_dem(r,s,h0,S,H)];
+        const int tau = s*H + h0;
+        const int row = ROW_DEM0 + r*T + tau;
+        const double rhs = Demand[idx_dem(r,s,h0,S,H)];
         row_lo[row] = rhs; row_hi[row] = rhs;
       }
 
   // Capacity (≥)   [-g + CFH*build >= -CFH*Xcap]
   for (int r=0; r<R; ++r)
-    for (int e=0; e<E; ++e){
-      double xcap = ExistingCap[idx_xcap(r,e,E)];
+    for (int e0=0; e0<E; ++e0){
+      const double xcap = ExistingCap[idx_xcap(r,e0,E)];
       for (int s=0; s<S; ++s)
         for (int h0=0; h0<H; ++h0){
-          int tau = s*H + h0;
-          double cf  = CF[idx_cf(r,e,s,h0,E,S,H)];
-          double hrs = Hours[idx_hours(s,h0,H)];
-          int row = ROW_CAP0 + ((r*E + e)*T + tau);
+          const int tau = s*H + h0;
+          const double cf  = CF[idx_cf(r,e0,s,h0,E,S,H)];
+          const double hrs = Hours[idx_hours(s,h0,H)];
+          const int row = ROW_CAP0 + ((r*E + e0)*T + tau);
           row_lo[row] = -cf * hrs * xcap;  // lower bound
           row_hi[row] = INF;
         }
     }
 
-  // Reserve (≥)
+  // Reserve (≥)  [imports do NOT contribute]
   if (useReserve){
     for (int r=0; r<R; ++r)
       for (int s=0; s<S; ++s)
         for (int h0=0; h0<H; ++h0){
-          int tau = s*H + h0;
+          const int tau = s*H + h0;
           double rhs = (1.0 + ReserveMargin) * Demand[idx_dem(r,s,h0,S,H)];
-          double hrs = Hours[idx_hours(s,h0,H)];
-          for (int e=0; e<E; ++e){
-            rhs -= CF[idx_cf(r,e,s,h0,E,S,H)] * hrs * ExistingCap[idx_xcap(r,e,E)];
+          const double hrs = Hours[idx_hours(s,h0,H)];
+          for (int e0=0; e0<E; ++e0){
+            rhs -= CF[idx_cf(r,e0,s,h0,E,S,H)] * hrs * ExistingCap[idx_xcap(r,e0,E)];
           }
-          int row = ROW_RSV0 + r*T + tau;
+          const int row = ROW_RSV0 + r*T + tau;
           row_lo[row] = rhs; row_hi[row] = INF;
         }
   }
@@ -273,41 +309,53 @@ static double solve_global_policies(
     + (useCESrow? (size_t)R*(size_t)E*(size_t)T + (g_colSlackCES>=0?1:0) : 0)
     + (useRPSrow? (size_t)R*(size_t)E*(size_t)T + (g_colSlackRPS>=0?1:0) : 0)
     + (size_t)R*(size_t)T*(size_t)E
+    + (size_t)R*(size_t)(R-1)*(size_t)T*2 // demand: inflow + outflow entries
   );
 
   for (int r=0; r<R; ++r){
-    int base = r * g_colsPerReg;
+    const int base = r * g_colsPerReg;
 
     for (int s=0; s<S; ++s)
       for (int h0=0; h0<H; ++h0){
-        int tau = s*H + h0;
-        double hrs = Hours[idx_hours(s,h0,H)];
+        const int tau = s*H + h0;
+        const double hrs = Hours[idx_hours(s,h0,H)];
 
-        // Demand row
-        int rowD = ROW_DEM0 + r*T + tau;
-        for (int e=0; e<E; ++e){
-          int colG = base + col_gen_e_tau(E, e, tau, T);
+        // Demand row: sum Gen + inflows - outflows = Demand
+        const int rowD = ROW_DEM0 + r*T + tau;
+        for (int e0=0; e0<E; ++e0){
+          const int colG = base + col_gen_e_tau(E, e0, tau, T);
           Tpls.push_back({rowD, colG, 1.0});
         }
+        // + inflows from all other origins d
+        for (int d=0; d<R; ++d){ if (d==r) continue; 
+          const int base_d = d * g_colsPerReg; // origin d block
+          const int colIn  = base_d + col_flow_od_tau(E,T,R, d, r, tau);
+          Tpls.push_back({rowD, colIn, 1.0});
+        }
+        // - outflows to all other destinations d
+        for (int d=0; d<R; ++d){ if (d==r) continue; 
+          const int colOut = base + col_flow_od_tau(E,T,R, r, d, tau);
+          Tpls.push_back({rowD, colOut, -1.0});
+        }
 
-        // Capacity rows
-        for (int e=0; e<E; ++e){
-          double cf = CF[idx_cf(r,e,s,h0,E,S,H)];
-          int rowC  = ROW_CAP0 + ((r*E + e)*T + tau);
-          int colG  = base + col_gen_e_tau(E, e, tau, T);
-          int colB  = base + col_build_e(e);
+        // Capacity rows per (r,e)
+        for (int e0=0; e0<E; ++e0){
+          const double cf = CF[idx_cf(r,e0,s,h0,E,S,H)];
+          const int rowC  = ROW_CAP0 + ((r*E + e0)*T + tau);
+          const int colG  = base + col_gen_e_tau(E, e0, tau, T);
+          const int colB  = base + col_build_e(e0);
           Tpls.push_back({rowC, colG, -1.0});
           if (cf!=0.0 && hrs!=0.0)
             Tpls.push_back({rowC, colB, cf * hrs});
         }
 
-        // Reserve rows
+        // Reserve rows: only local capacity contributes (as added above in row bounds)
         if (useReserve){
-          int rowR = ROW_RSV0 + r*T + tau;
-          for (int e=0; e<E; ++e){
-            double cf = CF[idx_cf(r,e,s,h0,E,S,H)];
+          const int rowR = ROW_RSV0 + r*T + tau;
+          for (int e0=0; e0<E; ++e0){
+            const double cf = CF[idx_cf(r,e0,s,h0,E,S,H)];
             if (cf!=0.0 && hrs!=0.0){
-              int colB = base + col_build_e(e);
+              const int colB = base + col_build_e(e0);
               Tpls.push_back({rowR, colB, cf * hrs});
             }
           }
@@ -315,11 +363,11 @@ static double solve_global_policies(
 
         // CES row
         if (useCESrow){
-          int rowCES = ROW_CES;
-          for (int e=0; e<E; ++e){
-            double q = CES_q[e];
+          const int rowCES = ROW_CES;
+          for (int e0=0; e0<E; ++e0){
+            const double q = CES_q[e0];
             if (q!=0.0){
-              int colG = base + col_gen_e_tau(E, e, tau, T);
+              const int colG = base + col_gen_e_tau(E, e0, tau, T);
               Tpls.push_back({rowCES, colG, q});
             }
           }
@@ -327,11 +375,11 @@ static double solve_global_policies(
 
         // RPS row
         if (useRPSrow){
-          int rowRPS = ROW_RPS;
-          for (int e=0; e<E; ++e){
-            double q = RPS_q[e];
+          const int rowRPS = ROW_RPS;
+          for (int e0=0; e0<E; ++e0){
+            const double q = RPS_q[e0];
             if (q!=0.0){
-              int colG = base + col_gen_e_tau(E, e, tau, T);
+              const int colG = base + col_gen_e_tau(E, e0, tau, T);
               Tpls.push_back({rowRPS, colG, q});
             }
           }
@@ -355,10 +403,6 @@ static double solve_global_policies(
   // ---- HiGHS solve ----
   void* h = Highs_create();
 
-  // 15-arg signature:
-  // Highs_passLp(h, num_col, num_row, num_nz, a_format, sense, offset,
-  //   col_cost, col_lower, col_upper, row_lower, row_upper,
-  //   a_start, a_index, a_value);
   const HighsInt a_format = 1;  // 1 = column-wise (CSC)
   const HighsInt sense    = 1;  // 1 = minimize
   const double   obj_offset = 0.0;
@@ -382,7 +426,7 @@ static double solve_global_policies(
   g_solved = false;
 
   if (g_lastCode==0){
-    double obj = Highs_getObjectiveValue(h);
+    const double obj = Highs_getObjectiveValue(h);
 
     std::vector<double> col_val(g_N_total, 0.0), col_dual(g_N_total,0.0);
     std::vector<double> row_val(std::max(1,rowCount), 0.0), row_dual(std::max(1,rowCount), 0.0);
@@ -392,13 +436,13 @@ static double solve_global_policies(
       // Cost breakout (by region) — slacks costs are NOT counted in regional buckets
       for (int r=0; r<g_R; ++r){
         double cc=0.0, ce=0.0;
-        int base = r * g_colsPerReg;
-        for (int e=0; e<g_E; ++e){
-          int colB = base + col_build_e(e);
-          cc += (CAPEX[e] + FOM[e]) * g_solution[colB];
-          double varc = Fuel[e] + VOM[e];
+        const int base = r * g_colsPerReg;
+        for (int e0=0; e0<g_E; ++e0){
+          const int colB = base + col_build_e(e0);
+          cc += (CAPEX[e0] + FOM[e0]) * g_solution[colB];
+          const double varc = Fuel[e0] + VOM[e0];
           for (int tau=0; tau<g_T; ++tau){
-            int colG = base + col_gen_e_tau(g_E, e, tau, g_T);
+            const int colG = base + col_gen_e_tau(g_E, e0, tau, g_T);
             ce += varc * g_solution[colG];
           }
         }
@@ -428,7 +472,10 @@ enum {
   F_COST_EN,
   F_LP_OBJ,
   F_LP_STATUS,
-  F_LP_CODE
+  F_LP_CODE,
+  F_FLOW_EXPORT,
+  F_FLOW_IMPORT,
+  F_FLOW_OD
 };
 
 extern "C" __declspec(dllexport) int VEFCC user_definition(
@@ -445,10 +492,10 @@ extern "C" __declspec(dllexport) int VEFCC user_definition(
   switch (setup_index){
     case 0:
       *sym        = (char*)"LP_Solve";
-      // Vectors first (10): Demand, CF, Hours, CAPEX, FOM, Fuel, VOM, ExistingCap, CES_q, RPS_q
-      *arglist    = (char*)"{Demand},{Capacity_factor},{Hours},{CAPEX},{FOM},{Fuel},{VOM},{ExistingCap},{MaxBuild},{CapMax},{CES_qualifying},{RPS_qualifying},CES_rhs,CES_ACP,RPS_rhs,RPS_ACP,ReserveMargin,R,S,H,E";
-      *num_args   = 21;
-      *num_vector = 12;
+      // Vectors first (13): Demand, CF, Hours, CAPEX, FOM, Fuel, VOM, ExistingCap, MaxBuild, CapMax, TransRR, CES_q, RPS_q
+      *arglist    = (char*)"{Demand},{Capacity_factor},{Hours},{CAPEX},{FOM},{Fuel},{VOM},{ExistingCap},{MaxBuild},{CapMax},{TransRR},{CES_qualifying},{RPS_qualifying},CES_rhs,CES_ACP,RPS_rhs,RPS_ACP,ReserveMargin,R,S,H,E";
+      *num_args   = 22;
+      *num_vector = 13;
       *func_index = F_SOLVE;
       return 1;
 
@@ -461,6 +508,10 @@ extern "C" __declspec(dllexport) int VEFCC user_definition(
     case 6: *sym=(char*)"LP_STATUS";      *arglist=(char*)""; *num_args=0; *num_vector=0; *func_index=F_LP_STATUS; return 1;
     case 7: *sym=(char*)"LP_CODE";        *arglist=(char*)""; *num_args=0; *num_vector=0; *func_index=F_LP_CODE;   return 1;
 
+    case 8: *sym=(char*)"LP_EXPORT";      *arglist=(char*)" region_pos , ts_pos , hr_pos "; *num_args=3; *num_vector=0; *func_index=F_FLOW_EXPORT; return 1;
+    case 9: *sym=(char*)"LP_IMPORT";      *arglist=(char*)" region_pos , ts_pos , hr_pos "; *num_args=3; *num_vector=0; *func_index=F_FLOW_IMPORT; return 1;
+    case 10:*sym=(char*)"LP_FLOW_OD";     *arglist=(char*)" origin_pos , dest_pos , ts_pos , hr_pos "; *num_args=4; *num_vector=0; *func_index=F_FLOW_OD; return 1;
+
     default: return 0;
   }
 }
@@ -471,7 +522,7 @@ extern "C" __declspec(dllexport) int VEFCC vensim_external(VV* val, int nval, in
   switch (funcid){
 
     case F_SOLVE: {
-      if (nval < 21) { val[0].val = 1e308; return 0; }
+      if (nval < 22) { val[0].val = 1e308; return 0; }
 
       const double* Dem    = val[0].vec->firstval; // [R,S,H]
       const double* CF     = val[1].vec->firstval; // [R,E,S,H]
@@ -480,27 +531,29 @@ extern "C" __declspec(dllexport) int VEFCC vensim_external(VV* val, int nval, in
       const double* FOM    = val[4].vec->firstval; // [E]
       const double* Fuel   = val[5].vec->firstval; // [E]
       const double* VOM    = val[6].vec->firstval; // [E]
-      const double* XCap    = val[7].vec->firstval; // [R,E]
+      const double* XCap   = val[7].vec->firstval; // [R,E]
       const double* MaxB   = val[8].vec->firstval; // [R,E]
       const double* CapMx  = val[9].vec->firstval; // [R,E]
+      const double* Trans  = val[10].vec->firstval; // [R,R]
 
-      const double* CES_q  = val[10].vec->firstval;  // [E]
-      const double* RPS_q  = val[11].vec->firstval;  // [E]
+      const double* CES_q  = val[11].vec->firstval;  // [E]
+      const double* RPS_q  = val[12].vec->firstval;  // [E]
 
-      double CES_rhs       = val[12].val;  // MWh
-      double CES_ACP       = val[13].val;  // $/MWh
-      double RPS_rhs       = val[14].val;  // MWh
-      double RPS_ACP       = val[15].val;  // $/MWh  // $/MWh
+      double CES_rhs       = val[13].val;  // MWh
+      double CES_ACP       = val[14].val;  // $/MWh
+      double RPS_rhs       = val[15].val;  // MWh
+      double RPS_ACP       = val[16].val;  // $/MWh
 
-      double ReserveMargin = val[16].val;
-      int R = (int)(val[17].val + 0.5);
-      int S = (int)(val[18].val + 0.5);
-      int H = (int)(val[19].val + 0.5);
-      int E = (int)(val[20].val + 0.5);
+      double ReserveMargin = val[17].val;
+      int R = (int)(val[18].val + 0.5);
+      int S = (int)(val[19].val + 0.5);
+      int H = (int)(val[20].val + 0.5);
+      int E = (int)(val[21].val + 0.5);
 
       val[0].val = solve_global_policies(
         Dem, CF, Hours, CAPEX, FOM, Fuel, VOM, XCap,
         MaxB, CapMx,
+        Trans,
         CES_q, CES_rhs, CES_ACP,
         RPS_q, RPS_rhs, RPS_ACP,
         ReserveMargin, R,S,H,E
