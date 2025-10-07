@@ -44,7 +44,8 @@ LP Solution=
 	  ELMCOUNT(Region),
 	  ELMCOUNT(timeslice),
 	  ELMCOUNT(hours of day),
-	  ELMCOUNT(electricity source)
+	  ELMCOUNT(electricity source),
+	  2 {Scenario: 1 = BAU, 2 = Policy}
 	)
 	~	
 	~		|
@@ -106,7 +107,7 @@ Electricty Generation by Plant Type[Region,electricity source,timeslice,hours of
 		=
 	LP GEN(Region Numbers [Region] ,Electricity source number[electricity source] , Timeslice Numbers\
 		[timeslice] , Hour Numbers
-	[hours of day])+0*ObjVal
+	[hours of day],2)+0*ObjVal
 	~	
 	~		|
 
@@ -153,7 +154,7 @@ biomass power plant category:
 	~		|
 
 Capacity Cost by Region[Region]=
-	LP COST CAP( Region Numbers[Region] ) + 0*ObjVal
+	LP COST CAP( Region Numbers[Region],2) + 0*ObjVal
 	~	
 	~		|
 
@@ -537,8 +538,8 @@ hard coal power plant category:
 	~		|
 
 New Capacity[Region,electricity source]=
-	LP CAP ADD( Region Numbers[Region] ,Electricity source number[electricity source])+0\
-		*ObjVal
+	LP CAP ADD( Region Numbers[Region] ,Electricity source number[electricity source],2)\
+		+0*ObjVal
 	~	
 	~		|
 
@@ -610,7 +611,7 @@ Demand Across Timeslice[Region, timeslice, hours of day]=
 	~		|
 
 status=
-	LP Status()        + 0*LP Solution
+	LP Status(2)        + 0*LP Solution
 	~	
 	~		|
 
@@ -730,7 +731,7 @@ timeslice:
 	~		|
 
 ObjVal=
-	 LP OBJ()           + 0*LP Solution
+	LP OBJ(2)           + 0*LP Solution
 	~	
 	~		|
 
@@ -910,7 +911,7 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,120,0
 :L<%^E!@
 1:current.vdfx
 4:Time
-5:RPS Target
+5:Capacity Cost by Region[Region]
 6:biomass
 6:biomass es
 6:biomass w CCS es
