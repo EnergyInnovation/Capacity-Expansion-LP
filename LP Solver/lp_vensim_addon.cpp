@@ -7,6 +7,8 @@
 //  - Inter-regional trading via directional flows Flow[r->d,τ] with caps TransRR[R,R]
 //    * TransRR[r,d] <= 0  ⇒ no line r→d (disabled).
 //    * If all pairs <= 0  ⇒ omit trading block entirely for speed.
+//  - Reserve sharing: imports can contribute to meeting reserve rows
+//  - Reserve rows only at peak timeslices using PeakMask[S,H] (1=peak; e.g., summer/winter peaks)
 //  - Multi-scenario snapshots: ALL getters take scenario_id; no global (last-solve) getters.
 //
 // Build (x64 Native Tools for VS):
@@ -118,6 +120,7 @@ static inline const Context* get_ctx(int sid){
 static inline int idx_dem(int r,int s,int h,int S,int H){ return ((r*S)+s)*H + h; }       // [R,S,H]
 static inline int idx_hours(int s,int h,int H){ return s*H + h; }                          // [S,H]
 static inline int idx_cf(int r,int e,int s,int h,int E,int S,int H){ return (((r*E+e)*S+s)*H+h);} // [R,E,S,H]
+static inline int idx_mask(int s,int h,int H){ return s*H + h; }                            // [S,H]
 static inline int idx_xcap(int r,int e,int E){ return r*E + e; }                           // [R,E]
 
 // Columns in region block
@@ -150,6 +153,7 @@ static double solve_global_policies(
   const double* Demand,
   const double* CF,
   const double* Hours,
+  const double* PeakMask,           // [S,H]  (1.0 at peak slices; 0.0 elsewhere)
   const double* CAPEX,
   const double* FOM,
   const double* Fuel,
@@ -182,6 +186,12 @@ static double solve_global_policies(
 
   reset_cache(R,E,T, addCES, addRPS, haveTrade);
   g_S=S; g_H=H;
+
+  // Helper to test if a timeslice is a reserve-peak
+  auto is_peak = [&](int s, int h0)->bool{
+    if (!PeakMask) return true; // if not provided, treat all as peak (backward compatible)
+    return PeakMask[idx_mask(s,h0,H)] > 0.5;
+  };
 
   // Rows
   const int ROW_DEM0=0;                 // R*T
@@ -249,7 +259,7 @@ static double solve_global_policies(
   // Row bounds
   vector<double> row_lo(rowCount,-INF), row_hi(rowCount,INF);
 
-  // Demand (=)
+  // Demand (=) for every τ
   for(int r=0;r<R;++r)
     for(int s=0;s<S;++s)
       for(int h0=0;h0<H;++h0){
@@ -272,18 +282,27 @@ static double solve_global_policies(
         }
     }
 
-  // Reserve (>=): (1+RM)*Demand - sum(CF*hrs*Existing) <= sum(CF*hrs*Build)
+  // Reserve rows ONLY at peak slices (imports contribute)
   if(useRes){
     for(int r=0;r<R;++r)
       for(int s=0;s<S;++s)
         for(int h0=0;h0<H;++h0){
           int tau=s*H+h0;
-          double rhs=(1.0+ReserveMargin)*Demand[idx_dem(r,s,h0,S,H)];
+          int row=ROW_RSV0+r*T+tau;
+
+          if (!is_peak(s,h0)) {
+            // Not a peak slice: disable row
+            row_lo[row] = -INF; row_hi[row] = INF;
+            continue;
+          }
+
+          // RHS: (1+RM)*Demand - sum(CF*hrs*Existing)
           double hrs=Hours[idx_hours(s,h0,H)];
+          double rhs=(1.0+ReserveMargin)*Demand[idx_dem(r,s,h0,S,H)];
           for(int e0=0;e0<E;++e0){
             rhs -= CF[idx_cf(r,e0,s,h0,E,S,H)]*hrs*ExistingCap[idx_xcap(r,e0,E)];
           }
-          int row=ROW_RSV0+r*T+tau; row_lo[row]=rhs; row_hi[row]=INF;
+          row_lo[row]=rhs; row_hi[row]=INF;
         }
   }
 
@@ -342,13 +361,28 @@ static double solve_global_policies(
           if(cf!=0.0 && hrs!=0.0) Tpls.push_back({rowC,cB,cf*hrs});
         }
 
-        // Reserve rows: only local capacity contributes
-        if(useRes){
+        // Reserve rows (ONLY at peaks): local capacity + inflows contribute
+        if(useRes && is_peak(s,h0)){
           int rowR=ROW_RSV0+r*T+tau;
+
+          // Local capacity contribution (as before)
           for(int e0=0;e0<E;++e0){
             double cf=CF[idx_cf(r,e0,s,h0,E,S,H)];
             if(cf!=0.0 && hrs!=0.0){
-              int cB=base+col_build_e(e0); Tpls.push_back({rowR,cB,cf*hrs});
+              int cB=base+col_build_e(e0);
+              Tpls.push_back({rowR, cB, cf*hrs});
+            }
+          }
+
+          // Count inflows as contributing to reserve (reserve sharing)
+          if (haveTrade){
+            for (int o=0; o<R; ++o){
+              if (o==r) continue;
+              if (!allow[o*R + r]) continue;
+              int base_o = o * g_colsPerReg;
+              int cIn = base_o + col_flow_od_tau(E,T,R, o, r, tau);
+              // inflows “add” to available supply at r in this hour
+              Tpls.push_back({rowR, cIn, 1.0});
             }
           }
         }
@@ -461,9 +495,9 @@ extern "C" __declspec(dllexport) int VEFCC user_definition(
   switch(setup_index){
     case 0:
       *sym=(char*)"LP_Solve";
-      // 13 vectors + scalars (CES_rhs, CES_ACP, RPS_rhs, RPS_ACP, ReserveMargin, R,S,H,E, scenario_id)
-      *arglist=(char*)"{Demand},{Capacity_factor},{Hours},{CAPEX},{FOM},{Fuel},{VOM},{ExistingCap},{MaxBuild},{CapMax},{TransRR},{CES_qualifying},{RPS_qualifying},CES_rhs,CES_ACP,RPS_rhs,RPS_ACP,ReserveMargin,R,S,H,E,scenario_id";
-      *num_args=23; *num_vector=13; *func_index=F_SOLVE; return 1;
+      // 14 vectors + scalars (CES_rhs, CES_ACP, RPS_rhs, RPS_ACP, ReserveMargin, R,S,H,E, scenario_id)
+      *arglist=(char*)"{Demand},{Capacity_factor},{Hours},{PeakMask},{CAPEX},{FOM},{Fuel},{VOM},{ExistingCap},{MaxBuild},{CapMax},{TransRR},{CES_qualifying},{RPS_qualifying},CES_rhs,CES_ACP,RPS_rhs,RPS_ACP,ReserveMargin,R,S,H,E,scenario_id";
+      *num_args=24; *num_vector=14; *func_index=F_SOLVE; return 1;
 
     case 1:  *sym=(char*)"LP_CAP_ADD";       *arglist=(char*)" region_pos , tech_pos , scenario_id ";                  *num_args=3; *num_vector=0; *func_index=F_CAP_ADD;      return 1;
     case 2:  *sym=(char*)"LP_GEN";           *arglist=(char*)" region_pos , tech_pos , ts_pos , hr_pos , scenario_id "; *num_args=5; *num_vector=0; *func_index=F_GEN;          return 1;
@@ -485,34 +519,35 @@ extern "C" __declspec(dllexport) int VEFCC vensim_external(VV* val, int nval, in
   switch(funcid){
 
     case F_SOLVE: {
-      if(nval<22){ val[0].val=1e308; return 0; }
+      if(nval<24){ val[0].val=1e308; return 0; }
 
-      const double* Dem  = val[0].vec->firstval;
-      const double* CF   = val[1].vec->firstval;
-      const double* Hours= val[2].vec->firstval;
-      const double* CAPEX= val[3].vec->firstval;
-      const double* FOM  = val[4].vec->firstval;
-      const double* Fuel = val[5].vec->firstval;
-      const double* VOM  = val[6].vec->firstval;
-      const double* XCap = val[7].vec->firstval;
-      const double* MaxB = val[8].vec->firstval;
-      const double* CapMx= val[9].vec->firstval;
-      const double* Trans= val[10].vec->firstval;
-      const double* CES_q= val[11].vec->firstval;
-      const double* RPS_q= val[12].vec->firstval;
+      const double* Dem     = val[0].vec->firstval;
+      const double* CF      = val[1].vec->firstval;
+      const double* Hours   = val[2].vec->firstval;
+      const double* PeakM   = val[3].vec->firstval;   // NEW
+      const double* CAPEX   = val[4].vec->firstval;
+      const double* FOM     = val[5].vec->firstval;
+      const double* Fuel    = val[6].vec->firstval;
+      const double* VOM     = val[7].vec->firstval;
+      const double* XCap    = val[8].vec->firstval;
+      const double* MaxB    = val[9].vec->firstval;
+      const double* CapMx   = val[10].vec->firstval;
+      const double* Trans   = val[11].vec->firstval;
+      const double* CES_q   = val[12].vec->firstval;
+      const double* RPS_q   = val[13].vec->firstval;
 
-      double CES_rhs = val[13].val;
-      double CES_ACP = val[14].val;
-      double RPS_rhs = val[15].val;
-      double RPS_ACP = val[16].val;
+      double CES_rhs = val[14].val;
+      double CES_ACP = val[15].val;
+      double RPS_rhs = val[16].val;
+      double RPS_ACP = val[17].val;
 
-      double ReserveMargin = val[17].val;
-      int R=(int)(val[18].val+0.5), S=(int)(val[19].val+0.5), H=(int)(val[20].val+0.5), E=(int)(val[21].val+0.5);
+      double ReserveMargin = val[18].val;
+      int R=(int)(val[19].val+0.5), S=(int)(val[20].val+0.5), H=(int)(val[21].val+0.5), E=(int)(val[22].val+0.5);
 
-      int scenario_id = (nval>=23)? (int)(val[22].val+0.5) : 0;
+      int scenario_id = (nval>=24)? (int)(val[23].val+0.5) : 0;
 
       val[0].val = solve_global_policies(
-        Dem,CF,Hours,CAPEX,FOM,Fuel,VOM,XCap,MaxB,CapMx,Trans,
+        Dem,CF,Hours,PeakM,CAPEX,FOM,Fuel,VOM,XCap,MaxB,CapMx,Trans,
         CES_q,CES_rhs,CES_ACP, RPS_q,RPS_rhs,RPS_ACP,
         ReserveMargin,R,S,H,E
       );

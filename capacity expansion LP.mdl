@@ -1,4 +1,44 @@
 {UTF-8}
+LP Solution=
+	LP SOLVE(
+	  Demand Across Timeslice[Region1, average winter,Hour0],
+	  Capacity Factor[Region1,hard coal es,average winter,Hour0],
+	  Hours[average winter, Hour0],
+	  Peak Seasons and Hours[average winter,Hour0],
+	  Annual Capital Recovery[hard coal es],
+	  FOM[hard coal es],
+	  Fuel Cost per Unit Output[hard coal es],
+	  VOM including Subsidies[hard coal es],
+	  Last Year Installed Capacity[Region1,hard coal es],
+	  Max Buildable Capacity This Year[Region1,hard coal es],
+	  Max Technical Capacity[Region1,hard coal es],
+	  Interregion Transfer Capacity Matrix[Import Region1,Export Region1],
+	  CES Qualifying Technologies[hard coal es],
+	  RPS Qualifying Technologies[hard coal es],
+	  CES RHS,
+	  CES ACP,
+	  RPS RHS,
+	  RPS ACP,
+	  Reserve Margin,
+	  ELMCOUNT(Region),
+	  ELMCOUNT(timeslice),
+	  ELMCOUNT(hours of day),
+	  ELMCOUNT(electricity source),
+	  2 {Scenario: 1 = BAU, 2 = Policy}
+	)
+	~	
+	~		|
+
+Peak Seasons and Hours[timeslice,hours of day] :EXCEPT: [peak summer,hours of day],[peak winter\
+		,hours of day]=
+	0 ~~|
+Peak Seasons and Hours[peak summer, hours of day]=
+	1 ~~|
+Peak Seasons and Hours[peak winter,hours of day]=
+	1
+	~	
+	~		|
+
 Capacity Factor[Region,dispatchable electricity source,timeslice,hours of day]=
 	0.9 ~~|
 Capacity Factor[Region,onshore wind es,timeslice,hours of day]=
@@ -41,35 +81,6 @@ SYSHECF Start Year Seasonal Hourly Expected Capacity Factors[offshore wind es,ti
 VOM including Subsidies[electricity source]=
 	VOM[electricity source]
 	-Subsidy per Unit Electricity Output[electricity source]
-	~	
-	~		|
-
-LP Solution=
-	LP SOLVE(
-	  Demand Across Timeslice[Region1, average winter,Hour0],
-	  Capacity Factor[Region1,hard coal es,average winter,Hour0],
-	  Hours[average winter, Hour0],
-	  Annual Capital Recovery[hard coal es],
-	  FOM[hard coal es],
-	  Fuel Cost per Unit Output[hard coal es],
-	  VOM including Subsidies[hard coal es],
-	  Last Year Installed Capacity[Region1,hard coal es],
-	  Max Buildable Capacity This Year[Region1,hard coal es],
-	  Max Technical Capacity[Region1,hard coal es],
-	  Interregion Transfer Capacity Matrix[Import Region1,Export Region1],
-	  CES Qualifying Technologies[hard coal es],
-	  RPS Qualifying Technologies[hard coal es],
-	  CES RHS,
-	  CES ACP,
-	  RPS RHS,
-	  RPS ACP,
-	  Reserve Margin,
-	  ELMCOUNT(Region),
-	  ELMCOUNT(timeslice),
-	  ELMCOUNT(hours of day),
-	  ELMCOUNT(electricity source),
-	  2 {Scenario: 1 = BAU, 2 = Policy}
-	)
 	~	
 	~		|
 
@@ -837,9 +848,9 @@ TIME STEP  = 1
 V300  Do not put anything below this section - it will be ignored
 *View 1
 $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,120,0
-10,1,Hours,688,337,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,1,Hours,664,393,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,2,Hourly Load MW,806,296,60,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,3,Capacity Factor,655,427,58,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,3,Capacity Factor,550,423,58,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,4,Annual Capital Recovery,551,731,44,26,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 10,5,FOM,970,936,20,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,6,VOM,793,777,20,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -848,7 +859,7 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,120,0
 10,9,status,936,540,23,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,10,CES Qualifying Technologies,576,600,56,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 10,11,CES Target,939,283,44,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,12,Days per Electricity Timeslice,544,343,71,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,12,Days per Electricity Timeslice,564,343,71,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,13,12,1,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,14,LP Solution,812,569,44,20,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,15,14,8,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
@@ -884,8 +895,8 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,120,0
 11,45,0,1175,667,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
 10,46,New Capacity,1175,702,41,27,40,131,0,0,0,0,0,0,0,0,0,0,0,0
 10,47,Start Year Capacity,1423,890,37,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,48,BAU Heat Rates by Power Plant Type,364,469,71,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,49,Fuel Prices by Fuel,172,567,53,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,48,BAU Heat Rates by Power Plant Type,367,655,71,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,49,Fuel Prices by Fuel,188,440,53,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,50,48,7,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,51,This Year CAPEX,354,728,51,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 10,52,Subsidy per Unit New Capacity,551,878,60,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -906,7 +917,7 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,120,0
 10,67,Daily Load Shape,637,191,40,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,68,66,2,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,69,67,2,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,70,Fuel Prices by Power Plant Type,186,464,79,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,70,Fuel Prices by Power Plant Type,187,567,79,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,71,49,70,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,72,70,7,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,73,Start Year Capacity by Region,1426,812,72,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -940,8 +951,8 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,120,0
 1,101,41,100,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,102,99,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,103,100,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,104,Interregion Transfer Capacity,532,457,65,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
-10,105,Interregion Transfer Capacity Matrix,631,517,74,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,104,Interregion Transfer Capacity,358,487,65,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,105,Interregion Transfer Capacity Matrix,549,491,74,27,8,131,0,0,0,0,0,0,0,0,0,0,0,0
 1,106,104,105,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,107,105,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 10,108,Subsidy per Unit Electricity Output,682,782,61,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
@@ -949,13 +960,15 @@ $192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,120,0
 1,110,109,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,111,108,109,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 1,112,6,109,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
-10,113,SYSHECF Start Year Seasonal Hourly Expected Capacity Factors,407,398,96,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,113,SYSHECF Start Year Seasonal Hourly Expected Capacity Factors,377,421,96,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
 1,114,113,3,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,115,Peak Seasons and Hours,855,432,55,18,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,116,115,14,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
 ///---\\\
 :L<%^E!@
 1:current.vdfx
 4:Time
-5:New Capacity[Region,electricity source]
+5:LP Solution
 6:biomass
 6:biomass es
 6:biomass w CCS es
